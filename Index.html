@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard สรุปยอดขายและวิเคราะห์ปัญหา (2024–2026)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body {
+      --background: #f1f5f9;
+      --foreground: #0f172a;
+      --card: #ffffff;
+      --card-border: #e2e8f0;
+      --border: #cbd5e1;
+      --muted-foreground: #475569;
+      --primary: #2563eb;
+      --primary-foreground: #ffffff;
+      --secondary: #dbeafe;
+      --secondary-foreground: #1e40af;
+      --code-foreground: #0369a1;
+      --link: #2563eb;
+      --success: #059669;
+      --warning: #d97706;
+      --error: #dc2626;
+      --chart-1: #2563eb;
+      --chart-2: #94a3b8;
+      --chart-3: #10b981;
+      --chart-4: #f59e0b;
+      background-color: #f1f5f9 !important;
+      color: #0f172a !important;
+    }
+    .tab-btn-active {
+      background-color: var(--primary);
+      color: var(--primary-foreground);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+    }
+    .sub-btn-active {
+      background-color: var(--secondary);
+      color: var(--secondary-foreground);
+      border-color: var(--primary);
+      font-weight: 600;
+    }
+    .bar-fill {
+      transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    @media print {
+      @page { size: A4 landscape; margin: 10mm; }
+      body {
+        background-color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      aside, .no-print { display: none !important; }
+      main { padding: 0 !important; width: 100% !important; }
+      .max-h-56, .max-h-64, .max-h-72, .max-h-80, .max-h-\[460px\], .max-h-\[520px\], .max-h-\[540px\] {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      .overflow-y-auto, .overflow-x-auto {
+        overflow: visible !important;
+      }
+      .print-page-break {
+        page-break-before: always;
+        break-before: page;
+        padding-top: 12px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased m-0 p-0">
+
+  <div class="min-h-screen flex flex-col md:flex-row">
+    <!-- ========================================================================= -->
+    <!-- LEFT SIDEBAR NAVIGATION MENU (แถบเมนูด้านข้าง)                             -->
+    <!-- ========================================================================= -->
+    <aside class="w-full md:w-64 lg:w-72 shrink-0 bg-[var(--card)] border-b md:border-b-0 md:border-r border-[var(--border)] p-4 flex flex-col justify-between md:sticky md:top-0 md:h-screen overflow-y-auto">
+      <div class="space-y-5">
+        <!-- Brand / Title -->
+        <div class="pb-3.5 border-b border-[var(--card-border)]">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center font-bold text-sm shadow-sm">BI</span>
+            <div>
+              <h1 class="text-sm font-bold text-[var(--foreground)] leading-tight">ระบบวิเคราะห์ยอดขาย</h1>
+              <p class="text-xs text-[var(--muted-foreground)]">ข้อมูลปี 2024 – 2026</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Menu Pages -->
+        <div class="space-y-1.5">
+          <div class="px-2 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">เมนูหลัก (เลือกหน้า)</div>
+          <button onclick="switchPage('overview')" id="tab-overview" class="tab-btn-active w-full text-left px-3 py-2.5 rounded-lg text-xs transition-all flex items-center justify-between gap-2 cursor-pointer">
+            <span class="flex items-center gap-2.5"><span>📊</span> <span>1. สรุปภาพรวมยอดขาย</span></span>
+          </button>
+          <button onclick="switchPage('customers')" id="tab-customers" class="w-full text-left px-3 py-2.5 rounded-lg text-xs text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-all flex items-center justify-between gap-2 cursor-pointer">
+            <span class="flex items-center gap-2.5"><span>🏢</span> <span>2. ยอดขายลูกค้าแต่ละเจ้า</span></span>
+            <span class="px-1.5 py-0.5 rounded text-xs bg-[var(--secondary)] text-[var(--secondary-foreground)] font-semibold">123</span>
+          </button>
+          <button onclick="switchPage('issues')" id="tab-issues" class="w-full text-left px-3 py-2.5 rounded-lg text-xs text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)] transition-all flex items-center justify-between gap-2 cursor-pointer">
+            <span class="flex items-center gap-2.5"><span>⚠️</span> <span>3. สรุปปัญหาด้านยอดขาย</span></span>
+            <span class="px-1.5 py-0.5 rounded-full text-xs bg-[var(--error)] text-[var(--primary-foreground)] font-bold">4</span>
+          </button>
+        </div>
+
+        <!-- Quick Filter Shortcuts in Sidebar -->
+        <div class="space-y-1.5 pt-2 border-t border-[var(--card-border)]">
+          <div class="px-2 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">ทางลัดเลือกดูรายปี</div>
+          <div class="grid grid-cols-2 gap-1.5 px-1">
+            <button onclick="switchPage('overview'); setOverviewPeriod('all')" class="px-2.5 py-1.5 rounded-md text-xs border border-[var(--border)] bg-[var(--background)] hover:border-[var(--primary)] text-[var(--foreground)] text-left cursor-pointer col-span-2 font-medium">📅 รวม 3 ปี (2024–2026)</button>
+            <button onclick="switchPage('overview'); setOverviewPeriod('2024')" class="px-2.5 py-1.5 rounded-md text-xs border border-[var(--border)] bg-[var(--background)] hover:border-[var(--primary)] text-[var(--foreground)] text-center cursor-pointer">ปี 2024</button>
+            <button onclick="switchPage('overview'); setOverviewPeriod('2025')" class="px-2.5 py-1.5 rounded-md text-xs border border-[var(--border)] bg-[var(--background)] hover:border-[var(--primary)] text-[var(--foreground)] text-center cursor-pointer">ปี 2025</button>
+            <button onclick="switchPage('overview'); setOverviewPeriod('2026')" class="px-2.5 py-1.5 rounded-md text-xs border border-[var(--border)] bg-[var(--background)] hover:border-[var(--primary)] text-[var(--foreground)] text-center cursor-pointer">ปี 2026</button>
+            <button onclick="switchPage('overview'); setOverviewPeriod('10m')" class="px-2.5 py-1.5 rounded-md text-xs border border-[var(--border)] bg-[var(--background)] hover:border-[var(--primary)] text-[var(--foreground)] text-center cursor-pointer">เทียบ 10ด.</button>
+          </div>
+        </div>
+
+        <!-- Quick Customer Segment Shortcuts in Sidebar -->
+        <div class="space-y-1.5 pt-2 border-t border-[var(--card-border)]">
+          <div class="px-2 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">ทางลัดกลุ่มลูกค้า</div>
+          <div class="space-y-1">
+            <button onclick="quickCustomerFilter('all')" class="w-full text-left px-2.5 py-1.5 rounded-md text-xs text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)] cursor-pointer flex justify-between">
+              <span>• ลูกค้าทั้งหมด</span><span class="font-mono">123 ราย</span>
+            </button>
+            <button onclick="quickCustomerFilter('top20')" class="w-full text-left px-2.5 py-1.5 rounded-md text-xs text-[var(--muted-foreground)] hover:bg-[var(--background)] hover:text-[var(--foreground)] cursor-pointer flex justify-between">
+              <span>• Top 20 ยอดสูงสุด</span><span class="font-mono">20 ราย</span>
+            </button>
+            <button onclick="quickCustomerFilter('grow')" class="w-full text-left px-2.5 py-1.5 rounded-md text-xs text-[var(--success)] hover:bg-[var(--background)] cursor-pointer flex justify-between font-medium">
+              <span>• ลูกค้าที่เติบโตในปี 26</span><span>🚀</span>
+            </button>
+            <button onclick="quickCustomerFilter('drop')" class="w-full text-left px-2.5 py-1.5 rounded-md text-xs text-[var(--warning)] hover:bg-[var(--background)] cursor-pointer flex justify-between font-medium">
+              <span>• ลูกค้ายอดตกในปี 26</span><span>⚠️</span>
+            </button>
+            <button onclick="quickCustomerFilter('churn')" class="w-full text-left px-2.5 py-1.5 rounded-md text-xs text-[var(--error)] hover:bg-[var(--background)] cursor-pointer flex justify-between font-medium">
+              <span>• หยุดซื้อในปี 26 (ยอด=0)</span><span class="font-mono">50 ราย</span>
+            </button>
+          </div>
+        </div>
+        <!-- Export PDF Section in Sidebar -->
+        <div class="space-y-1.5 pt-2 border-t border-[var(--card-border)]">
+          <div class="px-2 text-xs font-bold text-[var(--muted-foreground)] uppercase tracking-wider">ส่งออกรายงาน (PDF)</div>
+          <div class="space-y-1.5 px-1">
+            <button onclick="exportPDF('current')" class="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+              <span>📄</span> <span>Export PDF (เฉพาะหน้านี้)</span>
+            </button>
+            <button onclick="exportPDF('all')" class="w-full px-3 py-2 rounded-lg text-xs font-semibold border border-[var(--primary)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>📑</span> <span>Export PDF (ครบทั้ง 3 หน้า)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer Summary Box -->
+      <div class="mt-6 pt-3 border-t border-[var(--card-border)]">
+        <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-3 space-y-1.5 text-xs">
+          <div class="font-bold text-[var(--foreground)]">สรุปฐานข้อมูลทั้งหมด</div>
+          <div class="flex justify-between text-[var(--muted-foreground)]"><span>ยอดรวม 3 ปี:</span><span class="font-mono font-semibold text-[var(--foreground)]">฿149.18M</span></div>
+          <div class="flex justify-between text-[var(--muted-foreground)]"><span>บิลขายจริง:</span><span class="font-mono font-semibold text-[var(--foreground)]">10,397 ใบ</span></div>
+          <div class="flex justify-between text-[var(--muted-foreground)]"><span>ข้อมูลล่าสุด:</span><span class="font-mono text-[var(--foreground)]">17/11/2026</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================================================= -->
+    <!-- RIGHT MAIN CONTENT AREA                                                   -->
+    <!-- ========================================================================= -->
+    <main class="flex-1 min-w-0 p-4 md:p-6 space-y-5">
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]" id="active-page-badge">หน้า 1 / 3</span>
+            <h2 class="text-base md:text-lg font-bold tracking-tight text-[var(--foreground)]" id="active-page-title">สรุปภาพรวมยอดขาย (2024–2026)</h2>
+          </div>
+          <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+            ข้อมูลจากไฟล์ <code class="text-[var(--code-foreground)]">2024.xls</code>, <code class="text-[var(--code-foreground)]">2025.xls</code>, <code class="text-[var(--code-foreground)]">2026.xls</code> (ม.ค. 2024 – 17 พ.ย. 2026)
+          </p>
+        </div>
+        <div class="no-print flex flex-wrap items-center gap-2 shrink-0">
+          <button onclick="exportPDF('current')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer shadow-sm">
+            <span>📄</span> <span>Export PDF (หน้านี้)</span>
+          </button>
+          <button onclick="exportPDF('all')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border border-[var(--primary)] bg-[var(--secondary)] text-[var(--secondary-foreground)] hover:opacity-90 transition-all flex items-center gap-1.5 cursor-pointer">
+            <span>📑</span> <span>Export PDF (ครบ 3 หน้า)</span>
+          </button>
+        </div>
+      </div>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 1: SALES OVERVIEW                                                    -->
+    <!-- ========================================================================= -->
+    <div id="page-overview" class="space-y-5">
+      <!-- Filter Bar -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-semibold text-[var(--muted-foreground)]">เลือกช่วงเวลาแสดงผล:</span>
+          <button onclick="setOverviewPeriod('all')" id="ov-btn-all" class="sub-btn-active px-3 py-1.5 rounded-md text-xs border border-[var(--border)] cursor-pointer">รวม 3 ปี (2024–2026)</button>
+          <button onclick="setOverviewPeriod('2024')" id="ov-btn-2024" class="px-3 py-1.5 rounded-md text-xs border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer">ปี 2024</button>
+          <button onclick="setOverviewPeriod('2025')" id="ov-btn-2025" class="px-3 py-1.5 rounded-md text-xs border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer">ปี 2025</button>
+          <button onclick="setOverviewPeriod('2026')" id="ov-btn-2026" class="px-3 py-1.5 rounded-md text-xs border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer">ปี 2026 (ม.ค.–17 พ.ย.)</button>
+          <button onclick="setOverviewPeriod('10m')" id="ov-btn-10m" class="px-3 py-1.5 rounded-md text-xs border border-[var(--border)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] cursor-pointer">เทียบ 10 เดือนเต็ม (ม.ค.–ต.ค.)</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-[var(--muted-foreground)]">หน่วยเงินกราฟ:</span>
+          <select id="ov-metric-select" onchange="renderOverview()" class="bg-[var(--background)] border border-[var(--border)] rounded-md px-2.5 py-1 text-xs text-[var(--foreground)]">
+            <option value="pre">ยอดขายก่อนภาษี (Pre-VAT)</option>
+            <option value="tot">ยอดขายรวมภาษี 7% (Net Total)</option>
+            <option value="bills">จำนวนบิลขายจริง (ใบ)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- KPI Cards (6 Cards) -->
+      <div id="ov-kpi-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5"></div>
+
+      <!-- Monthly Comparison Chart + Yearly Comparison Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--card-border)] pb-3">
+            <div>
+              <h2 class="text-sm font-bold text-[var(--foreground)]">กราฟเปรียบเทียบยอดขายรายเดือน (ม.ค. – ธ.ค. 2024 vs 2025 vs 2026)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]" id="ov-chart-subtitle">เปรียบเทียบแนวโน้มรายเดือนทั้ง 3 ปี (คลิกหรือชี้ที่แท่งกราฟเพื่อดูรายละเอียด)</p>
+            </div>
+            <div class="flex items-center gap-3 text-xs">
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:var(--chart-2)"></span> 2024</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:var(--chart-1)"></span> 2025</span>
+              <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm inline-block" style="background:var(--chart-3)"></span> 2026</span>
+            </div>
+          </div>
+          <div class="w-full overflow-x-auto">
+            <canvas id="monthlyCanvas" height="270" class="w-full"></canvas>
+          </div>
+          <div id="ov-month-insight" class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs space-y-1"></div>
+        </div>
+
+        <!-- Right Column: Customer Concentration & Year-by-Year Summary -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-4 flex flex-col justify-between">
+          <div class="space-y-3">
+            <div class="border-b border-[var(--card-border)] pb-2.5">
+              <h2 class="text-sm font-bold text-[var(--foreground)]">สัดส่วนการกระจุกตัวของลูกค้า (Pareto)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">วิเคราะห์โครงสร้างรายได้ตามกลุ่มลูกค้า</p>
+            </div>
+            <div id="ov-pareto-bars" class="space-y-2.5"></div>
+          </div>
+
+          <div class="space-y-2.5 pt-3 border-t border-[var(--card-border)]">
+            <h3 class="text-xs font-bold text-[var(--foreground)]">สรุปเปรียบเทียบรายปี (ยอดก่อนภาษี)</h3>
+            <div id="ov-yearly-mini" class="space-y-2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly Breakdown Table & Top 10 Customers Quick View -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div class="lg:col-span-7 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--card-border)] pb-2.5">
+            <h2 class="text-sm font-bold text-[var(--foreground)]">ตารางสรุปยอดขายรายเดือน (2024 – 2026)</h2>
+            <span class="text-xs text-[var(--muted-foreground)]">หน่วย: บาท (ก่อนภาษี)</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                  <th class="py-2 px-2">เดือน</th>
+                  <th class="py-2 px-2 text-right">ปี 2024 (บิล)</th>
+                  <th class="py-2 px-2 text-right">ปี 2025 (บิล)</th>
+                  <th class="py-2 px-2 text-right">%YoY (25/24)</th>
+                  <th class="py-2 px-2 text-right">ปี 2026 (บิล)</th>
+                  <th class="py-2 px-2 text-right">%YoY (26/25)</th>
+                </tr>
+              </thead>
+              <tbody id="ov-monthly-tbody" class="divide-y divide-[var(--card-border)] font-mono tabular-nums"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--card-border)] pb-2.5">
+            <div>
+              <h2 class="text-sm font-bold text-[var(--foreground)]">Top 10 ลูกค้าสูงสุดตามช่วงที่เลือก</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">คลิกที่ชื่อลูกค้าเพื่อเปิดกราฟเจาะลึกรายเจ้า</p>
+            </div>
+            <button onclick="switchPage('customers')" class="text-xs text-[var(--link)] hover:underline cursor-pointer">ดูครบ 123 ราย →</button>
+          </div>
+          <div id="ov-top10-list" class="space-y-2"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 2: CUSTOMER SALES & INDIVIDUAL CHARTS (ALL 123 CUSTOMERS)            -->
+    <!-- ========================================================================= -->
+    <div id="page-customers" class="hidden space-y-5">
+      <!-- Section 2A: Individual Customer Deep-Dive Spotlight -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 md:p-5 space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[var(--card-border)] pb-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)]">เจาะลึกรายเจ้า</span>
+              <h2 class="text-base font-bold text-[var(--foreground)]" id="cust-detail-title">กราฟยอดขายรายเดือนของลูกค้าแต่ละเจ้า (2024–2026)</h2>
+            </div>
+            <p class="text-xs text-[var(--muted-foreground)] mt-0.5">เลือกลูกค้าจากรายการด้านขวา หรือคลิกที่แท่งกราฟ/ตารางด้านล่าง เพื่อดูกราฟยอดขายรายเดือนเปรียบเทียบ 3 ปีของลูกค้าเจ้านั้น</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <label class="text-xs text-[var(--muted-foreground)]">เลือกลูกค้า (123 ราย):</label>
+            <select id="cust-selector" onchange="selectCustomer(parseInt(this.value, 10))" class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] max-w-xs md:max-w-md font-medium"></select>
+          </div>
+        </div>
+
+        <!-- Selected Customer KPI Strip -->
+        <div id="cust-detail-kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+
+        <!-- Selected Customer Monthly Chart (12 Months x 3 Years) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          <div class="lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs font-bold text-[var(--foreground)]" id="cust-canvas-label">ยอดขายรายเดือน (ม.ค. – ธ.ค.) เปรียบเทียบปี 2024 / 2025 / 2026</span>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-2)"></span> 2024</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-1)"></span> 2025</span>
+                <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-3)"></span> 2026</span>
+              </div>
+            </div>
+            <canvas id="custMonthlyCanvas" height="230" class="w-full"></canvas>
+          </div>
+
+          <div class="lg:col-span-4 bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2">
+            <div class="text-xs font-bold text-[var(--foreground)] border-b border-[var(--card-border)] pb-1.5">ตารางยอดซื้อรายเดือนของลูกค้ารายนี้ (บาท)</div>
+            <div class="overflow-y-auto max-h-56">
+              <table class="w-full text-xs font-mono tabular-nums">
+                <thead>
+                  <tr class="text-[var(--muted-foreground)] border-b border-[var(--card-border)]">
+                    <th class="py-1 text-left font-sans">เดือน</th>
+                    <th class="py-1 text-right">2024</th>
+                    <th class="py-1 text-right">2025</th>
+                    <th class="py-1 text-right">2026</th>
+                  </tr>
+                </thead>
+                <tbody id="cust-detail-month-tbody" class="divide-y divide-[var(--card-border)]"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2B: All Customers Comparative Bar Chart & Filter Explorer -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 md:p-5 space-y-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-[var(--card-border)] pb-3">
+          <div>
+            <h2 class="text-base font-bold text-[var(--foreground)]">กราฟเปรียบเทียบยอดขายลูกค้าแต่ละเจ้า (คลิกที่ชื่อเพื่อดูกราฟรายเดือนด้านบน)</h2>
+            <p class="text-xs text-[var(--muted-foreground)]">แสดงกราฟแท่งเปรียบเทียบยอดขายของลูกค้าแต่ละรายแยกตามปี 2024, 2025 และ 2026</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="text" id="cust-search" oninput="renderCustomerSection()" placeholder="🔍 ค้นหาชื่อลูกค้า..." class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--foreground)] w-48" />
+            <select id="cust-filter-group" onchange="renderCustomerSection()" class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--foreground)]">
+              <option value="all">กลุ่มลูกค้า: ทั้งหมด (123 ราย)</option>
+              <option value="top20">เฉพาะ Top 20 สูงสุด</option>
+              <option value="top50">เฉพาะ Top 50 สูงสุด</option>
+              <option value="drop">⚠️ ยอดตกใน 2026 (เทียบ 2025)</option>
+              <option value="churn">🚨 หยุดซื้อในปี 2026 (ยอด = 0)</option>
+              <option value="grow">🚀 ยอดเติบโตใน 2026 (Rising Stars)</option>
+              <option value="new26">✨ ลูกค้าใหม่ปี 2026</option>
+              <option value="dataissue">🔧 มีปัญหาชื่อซ้ำ/ช่องว่าง/บิลว่าง</option>
+            </select>
+            <select id="cust-sort-by" onchange="renderCustomerSection()" class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs text-[var(--foreground)]">
+              <option value="total">เรียงตาม: ยอดรวม 3 ปี (มาก→น้อย)</option>
+              <option value="p26">เรียงตาม: ยอดปี 2026 (มาก→น้อย)</option>
+              <option value="p25">เรียงตาม: ยอดปี 2025 (มาก→น้อย)</option>
+              <option value="p24">เรียงตาม: ยอดปี 2024 (มาก→น้อย)</option>
+              <option value="diff26">เรียงตาม: ยอดที่ลดลงมากสุดใน 2026</option>
+              <option value="grow26">เรียงตาม: ยอดที่เพิ่มขึ้นมากสุดใน 2026</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
+          <span id="cust-filter-count">แสดงลูกค้า 123 ราย</span>
+          <div class="flex items-center gap-3">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-2)"></span> ปี 2024</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-1)"></span> ปี 2025</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm inline-block" style="background:var(--chart-3)"></span> ปี 2026</span>
+          </div>
+        </div>
+
+        <!-- Interactive Horizontal Bar Chart List for Each Customer -->
+        <div id="cust-bars-container" class="space-y-2 max-h-[520px] overflow-y-auto pr-1"></div>
+      </div>
+
+      <!-- Section 2C: Full Sortable Table of All Customers -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 md:p-5 space-y-3">
+        <div class="flex items-center justify-between border-b border-[var(--card-border)] pb-2.5">
+          <h3 class="text-sm font-bold text-[var(--foreground)]">ตารางสรุปยอดขายจำแนกตามลูกค้าแต่ละเจ้า (แสดง % สัดส่วน และ % การเปลี่ยนแปลงครบทุกเจ้า)</h3>
+          <span class="text-xs text-[var(--muted-foreground)]">คลิกแถวใดก็ได้เพื่อดูกราฟรายเดือนด้านบน</span>
+        </div>
+        <div class="overflow-x-auto max-h-[540px]">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead class="sticky top-0 bg-[var(--card)] border-b border-[var(--border)] text-[var(--muted-foreground)]">
+              <tr>
+                <th class="py-2 px-2">#</th>
+                <th class="py-2 px-2">ชื่อลูกค้า</th>
+                <th class="py-2 px-2 text-right">ปี 2024 (%สัดส่วนปี 24)</th>
+                <th class="py-2 px-2 text-right">ปี 2025 (%สัดส่วนปี 25)</th>
+                <th class="py-2 px-2 text-right">%YoY (25/24)</th>
+                <th class="py-2 px-2 text-right">ปี 2026 (%สัดส่วนปี 26)</th>
+                <th class="py-2 px-2 text-right">%YoY (26/25)</th>
+                <th class="py-2 px-2 text-right">รวม 3 ปี (บาท)</th>
+                <th class="py-2 px-2 text-right">%สัดส่วนรวม</th>
+                <th class="py-2 px-2 text-center">แนวโน้ม (% เปลี่ยนแปลงชัดเจน)</th>
+              </tr>
+            </thead>
+            <tbody id="cust-table-tbody" class="divide-y divide-[var(--card-border)] font-mono tabular-nums"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PAGE 3: BUSINESS ISSUES & ACTIONABLE SOLUTIONS                            -->
+    <!-- ========================================================================= -->
+    <div id="page-issues" class="hidden space-y-5">
+      <!-- Top Issue Summary BannerCards (4 Core Business Problems) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--muted-foreground)]">1. ความเสี่ยงกระจุกตัว (Top 1)</span>
+            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--error)] text-[var(--primary-foreground)]">วิกฤต</span>
+          </div>
+          <div class="text-xl font-bold font-mono tabular-nums text-[var(--foreground)]">33.92%</div>
+          <p class="text-xs text-[var(--muted-foreground)]">บจก. ดิจิแพค รายเดียวครอง 1 ใน 3 ของรายได้บริษัท (50.61M บาท)</p>
+        </div>
+
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--muted-foreground)]">2. ยอดขายชะลอตัว (ม.ค.–ต.ค. 26)</span>
+            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--error)] text-[var(--primary-foreground)]">สำคัญมาก</span>
+          </div>
+          <div class="text-xl font-bold font-mono tabular-nums text-[var(--error)]">-25.54% YoY</div>
+          <p class="text-xs text-[var(--muted-foreground)]">ยอด 10 เดือนปี 2026 ลดลง -13.37M บาท เทียบช่วงเดียวกันปี 2025</p>
+        </div>
+
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--muted-foreground)]">3. ลูกค้าหลักยอดตกหนักใน 2026</span>
+            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--warning)] text-[var(--primary-foreground)]">เร่งกู้ยอด</span>
+          </div>
+          <div class="text-xl font-bold font-mono tabular-nums text-[var(--foreground)]">23 รายหลัก</div>
+          <p class="text-xs text-[var(--muted-foreground)]">เช่น ไอสมาร์ท ลาเบล (-70%), มาร์คแพค (-75%), นครไทย (-42%)</p>
+        </div>
+
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-1">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-[var(--muted-foreground)]">4. ลูกค้าที่หายไปในปี 2026</span>
+            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--warning)] text-[var(--primary-foreground)]">ต้องดึงกลับ</span>
+          </div>
+          <div class="text-xl font-bold font-mono tabular-nums text-[var(--foreground)]">50 ราย</div>
+          <p class="text-xs text-[var(--muted-foreground)]">เคยซื้อในปี 2024–2025 (รวมกว่า 10.6M บาท) แต่ปี 2026 ยอดเป็น 0</p>
+        </div>
+      </div>
+
+      <!-- Category 1: Business & Sales Problems -->
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 md:p-5 space-y-4">
+        <div class="border-b border-[var(--card-border)] pb-3">
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold bg-[var(--error)] text-[var(--primary-foreground)]">สรุปปัญหา</span>
+            <h2 class="text-base font-bold text-[var(--foreground)]">สรุปปัญหาด้านยอดขายและความเสี่ยงทางธุรกิจ (Business & Revenue Issues)</h2>
+          </div>
+          <p class="text-xs text-[var(--muted-foreground)] mt-1">วิเคราะห์จากพฤติกรรมการสั่งซื้อจริงของลูกค้าทั้ง 123 ราย ระหว่างปี 2024–2026</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Issue 1: Customer Concentration & Digipack Drop -->
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="text-sm font-bold text-[var(--foreground)]">ปัญหาที่ 1: การพึ่งพิงลูกค้ารายใหญ่สูงเกินไป (Concentration Risk)</h3>
+              <span class="px-2 py-0.5 rounded text-xs bg-[var(--error)] text-[var(--primary-foreground)] shrink-0">ความเสี่ยงสูง</span>
+            </div>
+            <ul class="text-xs text-[var(--muted-foreground)] space-y-1.5 list-disc pl-4">
+              <li><strong class="text-[var(--foreground)]">บริษัท ดิจิแพค จำกัด</strong> เพียงรายเดียว มียอดซื้อรวม 3 ปีสูงถึง <strong class="text-[var(--foreground)]">50,607,465.26 บาท (33.92%)</strong> จากยอดขายรวมทั้งบริษัท 149.18 ล้านบาท (ออกบิลรวม 3,847 ใบ หรือ 37% ของบิลทั้งหมด)</li>
+              <li>ลูกค้า Top 5 รายแรก ครองสัดส่วนรวมกันถึง <strong class="text-[var(--foreground)]">55.37%</strong> ของรายได้ทั้งหมด</li>
+              <li>เมื่อยอดสั่งซื้อของ <strong class="text-[var(--foreground)]">ดิจิแพค</strong> ชะลอตัวลงตั้งแต่เดือน พ.ค. 2026 (จากเฉลี่ย 1.8–2.1M/เดือน ในปี 2025 เหลือ 1.1–1.3M/เดือน ในปี 2026) จึงฉุดยอดขายรวมของบริษัทลงทันที</li>
+            </ul>
+          </div>
+
+          <!-- Issue 2: H2 2026 Sharp Slowdown -->
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="text-sm font-bold text-[var(--foreground)]">ปัญหาที่ 2: ยอดขายหดตัวรุนแรงตั้งแต่ พ.ค. 2026 เป็นต้นมา</h3>
+              <span class="px-2 py-0.5 rounded text-xs bg-[var(--error)] text-[var(--primary-foreground)] shrink-0">ต้องเร่งแก้ไข</span>
+            </div>
+            <ul class="text-xs text-[var(--muted-foreground)] space-y-1.5 list-disc pl-4">
+              <li>ช่วง <strong class="text-[var(--foreground)]">ม.ค.–เม.ย. 2026</strong> ยอดขายทำได้ดีใกล้เคียงปี 2025 (18.07M เทียบกับ 19.92M ในปี 2025 หรือ -9.3%)</li>
+              <li>แต่ตั้งแต่ <strong class="text-[var(--foreground)]">พ.ค.–ต.ค. 2026 (6 เดือนติดต่อกัน)</strong> ยอดขายร่วงลงเหลือเฉลี่ย 3.20M–3.83M บาท/เดือน ลดลง <strong class="text-[var(--error)]">-29% ถึง -46% YoY</strong> (พ.ค. -46.4%, ก.ค. -37.6%, ส.ค. -37.3%, ก.ย. -35.3%)</li>
+              <li>ส่งผลให้ยอดสะสม 10 เดือนแรก (ม.ค.–ต.ค. 2026) อยู่ที่ <strong class="text-[var(--foreground)]">38.97M บาท</strong> ถอยกลับไปใกล้เคียงปี 2024 (38.56M บาท)</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Issue 3 & 4: Key Accounts Dropping + Churned Customers Tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-2">
+          <!-- Issue 3: Sharp Drop Accounts -->
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-[var(--foreground)]">ปัญหาที่ 3: ลูกค้าหลักที่ยังซื้ออยู่แต่ยอดตกหนักในปี 2026</h3>
+                <p class="text-xs text-[var(--muted-foreground)]">คลิกที่ชื่อลูกค้าเพื่อเปิดดูกราฟรายเดือนว่าเริ่มตกตั้งแต่เดือนไหน</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto max-h-72 bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                  <tr>
+                    <th class="py-1.5 px-1.5">ลูกค้า</th>
+                    <th class="py-1.5 px-1.5 text-right">ปี 2025</th>
+                    <th class="py-1.5 px-1.5 text-right">ปี 2026</th>
+                    <th class="py-1.5 px-1.5 text-right">ลดลง (บาท)</th>
+                    <th class="py-1.5 px-1.5 text-right">%ลดลง</th>
+                  </tr>
+                </thead>
+                <tbody id="issue-drop-tbody" class="divide-y divide-[var(--card-border)] font-mono tabular-nums"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Issue 4: Churned Customers (0 Baht in 2026) -->
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-sm font-bold text-[var(--foreground)]">ปัญหาที่ 4: ลูกค้าที่หยุดซื้อในปี 2026 (Churned = 0 บาท)</h3>
+                <p class="text-xs text-[var(--muted-foreground)]">เคยมียอดซื้อในปี 2024–2025 แต่ไม่มีคำสั่งซื้อเลยในปี 2026 (เรียงตามมูลค่าสูงสุด)</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto max-h-72 bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                  <tr>
+                    <th class="py-1.5 px-1.5">ลูกค้าที่หายไป</th>
+                    <th class="py-1.5 px-1.5 text-right">ปี 2024</th>
+                    <th class="py-1.5 px-1.5 text-right">ปี 2025</th>
+                    <th class="py-1.5 px-1.5 text-right">รวมที่เคยซื้อ</th>
+                    <th class="py-1.5 px-1.5 text-center">ปีสุดท้ายที่ซื้อ</th>
+                  </tr>
+                </thead>
+                <tbody id="issue-churn-tbody" class="divide-y divide-[var(--card-border)] font-mono tabular-nums"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </main>
+  </div>
+
+  <script>
+  const RAW_DATA = {"ym":{"2024":[[3331277.59,233189.55,3564467.14,273,0],[3948508.47,276395.71,4224904.18,273,0],[5516392.67,386147.56,5902540.23,341,0],[3914090.91,273986.45,4188077.36,259,0],[3529533.11,247067.41,3776600.52,261,0],[4823739.45,337661.88,5161401.33,276,0],[3215783.02,225104.93,3440887.95,201,0],[3134385.89,219407.13,3353793.02,225,0],[2938984.7,205729.04,3144713.74,200,0],[4206888.99,294482.37,4501371.36,271,4],[4762392.22,333367.66,5095759.88,314,0],[3482917.26,243804.34,3726721.6,242,3]],"2025":[[4502808.38,315196.66,4818005.04,295,1],[4780417.28,334629.32,5115046.6,341,5],[5437336.64,380613.68,5817950.32,362,7],[5196734.1,363771.47,5560505.57,328,2],[6101456.37,427102.04,6528558.41,370,2],[4118302.81,288281.29,4406584.1,315,1],[6139421.18,429759.58,6569180.76,411,1],[5557781.11,389044.76,5946825.87,337,1],[5478596.86,383501.93,5862098.79,409,6],[5026187.47,351833.18,5378020.65,375,3],[4410074.93,308705.29,4718780.22,333,9],[4174183.42,292192.91,4466376.33,294,0]],"2026":[[4128069.68,288964.97,4417034.65,322,0],[3997493.26,279824.59,4277317.85,274,0],[4822299.06,337561.04,5159860.1,340,0],[5123948.3,358676.45,5482624.75,307,1],[3268142.53,228770.07,3496912.6,278,2],[3200514.35,224036.07,3424550.42,243,1],[3833454.04,268341.86,4101795.9,256,1],[3486285.07,244040.0,3730325.07,267,0],[3543511.85,248045.87,3791557.72,287,1],[3565603.05,249592.26,3815195.31,298,0],[2480447.26,173631.36,2654078.62,169,0],[0,0,0,0,0]]},"c":[
+["บริษัท ดิจิแพค จำกัด",0,16353307.31,20513399.9,13740758.05,50607465.26,1142,1507,1198,2,16,3,[1073616,1071291,1439029,1294365,1243301,1654470,1309415,1149000,827703,1680780,2435803,1174535],[1333419,1601361,1853074,2149848,2039582,1380694,2096144,1933065,1849806,1651886,1461593,1162928],[1162731,1128711,1408165,2167498,1099525,873981,1376620,1198632,1310504,1217350,797042,0]],
+["บริษัท ไอสมาร์ท ลาเบล จำกัด",0,2965609.57,6357093.61,1908809.33,11231512.51,306,500,141,0,2,0,[307497,424035,336429,341590,292810,481082,35032,159003,28480,51246,234330,274076],[448494,421518,657421,352237,493852,462690,686579,444427,586944,596413,607560,598959],[576651,493098,226743,221921,230826,150660,0,0,0,8910,0,0]],
+["บริษัท นครไทย เลเบิล มีเดีย โปรดักชั่น จำกัด",0,4600286.84,3260748.05,1904855.02,9765889.91,224,211,164,0,0,0,[344197,441085,488654,322108,399943,356579,326815,356214,512580,487085,211929,353097],[445702,248115,230009,337037,340030,284363,426867,209384,190542,234467,172454,141776],[192180,218248,208770,93615,104679,149032,175735,243795,213506,245038,60256,0]],
+["ห้างหุ้นส่วนจำกัด อิตัลพริ้น",0,1487723.53,1856139.24,2198352.55,5542215.32,58,63,55,0,1,0,[116548,224712,146826,133200,56576,141165,207656,27575,42270,165385,111815,113995],[78465,74438,208188,178265,60710,269989,91635,356338,99090,86710,194848,157464],[108100,167630,144520,252390,55125,77235,268591,238194,307386,313188,265993,0]],
+["บริษัท เค. ซัพพลาย เชน จำกัด",0,2198783.22,2090999.15,1168364.1,5458146.47,106,102,38,0,0,0,[147617,237258,241864,200479,128258,188265,216066,165908,119944,175726,179316,198082],[224365,161835,135894,191280,155808,149810,252444,115900,94512,169221,264078,175853],[193776,211416,291936,291414,143846,0,5400,0,0,30576,0,0]],
+["บริษัท มาร์คแพค จำกัด",0,1771940.84,2663584.92,667292.86,5102818.62,57,66,19,0,0,0,[0,0,0,0,75862,236425,153450,232928,230162,180240,231060,431812],[279696,269748,314719,126840,286890,150312,386640,186332,132768,244049,117400,168192],[106089,104703,104543,113563,66064,34285,29157,0,41340,67550,0,0]],
+["บริษัท แอบโซลูท แอ๊ดวานซ์ ซัพพลายเออร์ จำกัด",0,176407,2083652.08,2430868.83,4690927.91,15,83,88,0,0,1,[0,0,41013,7820,17164,54880,9380,0,16716,6160,15294,7980],[140022,76538,174718,153470,313956,83720,182478,196595,114172,282127,200320,165536],[60147,198433,249749,306437,235244,73629,71415,257249,268066,374260,336241,0]],
+["บริษัท แพลททินั่ม อินเตอร์ พริ้น แอนด์ ซัพพลาย จำกัด",0,115344,965485.48,3259160,4339989.48,9,55,169,0,1,1,[68208,8832,38304,0,0,0,0,0,0,0,0,0],[0,0,0,54489,105960,89448,57840,161616,161952,129009,12528,192644],[344781,247209,430628,100872,239954,435204,364812,282367,240126,248375,324832,0]],
+["บริษัท คิง แพคเกจจิ้ง จำกัด",0,3029725.35,995610,0,4025335.35,112,15,0,0,1,0,[228746,199631,551592,474263,379179,508233,74965,118755,335646,91350,67367,0],[166650,191900,151500,75750,151500,75750,0,75750,106810,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท นายทำถูก จำกัด",0,1163837.5,1217271,1614565,3995673.5,49,39,45,0,1,0,[107055,87142,138188,129460,78622,54450,146108,73012,96525,98010,73260,82005],[148335,72930,42900,92400,96030,84315,59400,115995,83490,174010,150530,96936],[113970,144360,147730,349800,26050,96310,228810,117160,165130,149955,75290,0]],
+["บริษัท มาสเตอร์ ฟอร์ม อินดัสตรี้ จำกัด",0,187758.4,2080001.22,1616957.28,3884716.9,18,140,139,0,1,0,[0,0,0,0,0,0,0,0,0,0,54497,133261],[96824,182615,248732,273709,338208,61790,106195,132209,291573,129246,159695,59206],[35442,52574,63735,227294,203024,121828,361122,300766,147374,64859,38938,0]],
+["บริษัท พิมพ์ถูก พิมพ์ดี 69 จำกัด",0,333072.63,1065233.84,1058224.08,2456530.55,70,174,161,2,1,0,[15434,7196,42592,1547,11867,3240,3434,1258,23274,89436,89032,44763],[55290,129652,86308,42410,87845,57719,116827,79291,122592,98799,63024,125478],[115541,83978,194756,96469,88135,98267,90501,60527,61420,154089,14542,0]],
+["บริษัท บี.เอ.โค้ด เอเชีย จำกัด",0,295216.6,1583630,351458.3,2230304.9,12,61,16,0,0,0,[0,0,8520,0,0,0,0,0,0,15742,152756,118199],[111582,60446,71082,76862,156668,150658,149468,249526,201034,133713,45784,176807],[74184,47160,75762,27108,27020,23274,11502,11502,26838,27108,0,0]],
+["บริษัท แอท ซีเคียวริตี้ พริ้นติ้ง จำกัด ",1,594630.73,1130645.02,401450.65,2126726.4,134,118,43,0,0,1,[47025,42300,26250,51120,19575,1491,38742,63473,47546,60167,131505,65438],[180472,169569,35335,182780,70440,2600,119010,102225,78294,91977,34049,63893],[66306,22256,100764,20560,52872,19600,43348,15610,26932,33202,0,0]],
+["บริษัท แอนท์รูม จำกัด",0,693110,1030420,365780,2089310,16,23,11,0,1,0,[0,26720,106820,32100,42860,85180,85360,73920,73920,121440,34230,10560],[73920,95040,73920,73920,116160,31680,120300,0,155400,82880,103600,103600],[117140,10360,67340,0,51800,25900,62160,31080,0,0,0,0]],
+["บริษัท จินเม่า การพิมพ์(ประเทศไทย)จำกัด",0,884948.5,942596,85575,1913119.5,77,76,9,0,0,0,[18060,26560,12520,28416,102640,65980,133660,48720,99160,141210,114432,93590],[154408,130868,37240,92680,142030,22190,62108,57750,80062,60655,62748,39858],[85575,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท พี แอนด์ พี เซอร์วิส แอนด์ซัพพลาย จำกัด",0,888999.58,429733.4,557961,1876693.98,58,52,67,0,1,0,[106801,71176,139511,27216,22785,299568,15456,62496,76591,61639,0,5760],[0,7680,21840,25500,21770,35736,64677,88010,26170,17080,73356,47914],[10728,52350,52988,0,40513,80040,37624,58402,81226,42668,101422,0]],
+["บริษัท จีแอลโอ เมนโน่ จำกัด",0,763864.95,839367.75,0,1603232.7,53,32,0,0,0,0,[22395,11340,62944,29860,20538,86592,86782,44980,0,135580,205719,57135],[157380,119925,165686,63825,98566,87975,0,16560,0,70500,13950,45000],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอส.เค.ซิสเท็มส์ จำกัด ",1,105451.6,707438.3,641822.4,1454712.3,10,96,74,0,0,0,[0,0,14550,0,17486,31500,7275,9700,0,7275,0,17666],[26867,57814,87626,53474,131850,19032,112582,30696,57970,27312,61440,40776],[78060,27816,104868,150422,18096,32279,32288,31044,50830,64026,52094,0]],
+["ห้างหุ้นส่วนจำกัด ทริปเปิ้ล 3พี",0,440000,461271.8,368000,1269271.8,12,13,13,0,0,0,[66000,88000,44000,0,0,0,0,110000,0,44000,22000,66000],[0,44000,88000,0,66000,0,66000,66000,0,44000,44000,43272],[44000,44000,44000,0,44000,24000,48000,48000,24000,24000,24000,0]],
+["บริษัท เวลทรอน คอร์ปอเรชั่น จำกัด",0,594200.68,590722.17,0,1184922.85,52,51,0,0,1,0,[88776,34924,50076,28920,51876,132732,32040,45972,24695,32913,41020,30256],[59616,55989,85318,76418,40676,41642,77878,49162,50818,13599,39606,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอ็มนารา ซัพพลายส์ จำกัด",0,0,71730.75,1014025.05,1085755.8,0,14,112,0,1,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,5048,5589,0,3898,0,0,0,0,0,3985,53211],[94530,15284,174875,94077,67826,38270,94706,109931,111513,78747,134266,0]],
+["บริษัท เอ็มซี ฮาร์ดแวร์ แอนด์ ทูลส์ จำกัด",0,1022716,0,0,1022716,5,0,0,0,0,0,[137750,235746,649220,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท คิวพี ดิจิเทค จำกัด",0,237300,220150,558700,1016150,19,15,27,0,0,0,[7000,0,0,10500,50050,28000,0,26250,17500,31500,31500,35000],[17500,17500,17500,0,42000,24500,32900,0,26250,17500,24500,0],[45500,29750,121450,4000,20800,56000,54800,50000,60000,60000,56400,0]],
+["ห้างหุ้นส่วนจำกัด มิตรภาพการพิมพ์1995",0,597680.54,379877.4,10637.5,988195.44,37,18,2,0,1,0,[119000,59535,34920,46640,0,5200,14400,31720,128302,141323,14400,2240],[77601,42683,63068,99939,4462,92123,0,0,0,0,0,0],[0,0,0,0,5198,5440,0,0,0,0,0,0]],
+["บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด",0,749957.8,129650,68400,948007.8,40,9,2,0,5,0,[0,118980,126492,61200,124841,141996,8460,29916,7990,57617,72466,0],[30570,0,7990,0,13570,5580,0,0,54000,0,17940,0],[36000,0,0,0,0,0,0,0,0,32400,0,0]],
+["บริษัท สุเบญจา อินเตอร์เทรด จำกัด",0,10350,512119.75,379882,902351.75,1,30,18,0,0,0,[0,0,0,0,0,10350,0,0,0,0,0,0],[0,0,21970,12936,30759,89922,63645,58181,91445,83133,5994,54135],[8450,0,0,56048,51064,140104,54460,21164,16690,31902,0,0]],
+["บริษัท ลัคกี้เลเบล แอนด์ สติ๊กเกอร์ จำกัด",0,0,509288.23,363541.75,872829.98,0,51,17,0,1,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,77713,69032,60256,21202,15628,54102,102125,73890,0,35340],[109759,20140,36622,35340,0,35340,35046,0,55955,35340,0,0]],
+["บริษัท พี.แพ็ค ลาเบล จำกัด",0,0,287276.2,547287.24,834563.44,0,16,29,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,23540,0,0,0,49712,26172,67619,64072,56160],[28342,69930,58332,82122,109732,0,65840,50752,15763,18480,47992,0]],
+["บริษัท ปิยะการพิมพ์ จำกัด",0,280680,205880,325740,812300,20,14,11,0,0,0,[23540,28000,33400,28760,44260,18600,26760,7040,34200,13800,0,22320],[8840,6200,18600,0,12400,19200,12400,45800,31200,0,20400,30840],[27200,32200,0,61965,8800,29575,55800,18600,0,91600,0,0]],
+["บริษัท ไอด้า 74 พริ้น จำกัด",0,0,575577,163390,738967,0,36,21,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[21140,223775,185910,68040,0,35167,17150,0,21260,3135,0,0],[0,0,23005,0,25340,2275,26065,7680,56655,17970,4400,0]],
+["บริษัท ซีเคเอ็น ดิจิตอล ควอลลิตี้ จำกัด",0,0,521919.81,188955,710874.81,0,32,5,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,99650,73054,69526,53737,12315,41341,95062,31875,31875,13483],[0,0,0,0,0,89505,43095,46410,9945,0,0,0]],
+["บริษัท เอ พลัส ซัพพลาย(2018) จำกัด",0,0,121054.4,510328.8,631383.2,0,7,22,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,62988,30226,27840],[18360,35100,132840,45280,34560,68288,0,68160,73872,0,33869,0]],
+["บริษัท จีแอลโอ พริ้นติ้ง จำกัด",0,0,573204,39600,612804,0,17,3,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,83732,61238,124200,97290,154545,0,0,52200],[39600,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เคเค.โปรเจค สติกเกอร์ แอนด์ พริ้นท์ จำกัด",0,402957.78,66114.5,137503,606575.28,57,21,34,1,0,0,[13560,12483,84464,70719,33002,6873,2523,38137,24067,37632,26435,53063],[30496,2716,7000,0,0,0,0,8670,5035,5731,3388,3078],[10486,8625,6952,59917,24990,14367,7290,1425,0,3450,0,0]],
+["บริษัท เอมเซลล์ จำกัด",0,371710,219060.5,0,590770.5,21,18,0,0,0,0,[0,46425,170650,113085,41550,0,0,0,0,0,0,0],[0,0,0,0,8759,44394,39159,18354,12863,6213,17765,71554],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ซุง เปา เฮา (ประเทศไทย) จำกัด",0,0,368060,201635,569695,0,56,22,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,7385,58810,72150,42035,102815,66325,18540],[0,0,0,0,28120,65865,34595,67795,5260,0,0,0]],
+["บริษัท เซอร์วิส ซัพพลาย เซ็นเตอร์ จำกัด",0,353152.8,74630.5,89517.5,517300.8,41,16,31,0,0,0,[5000,55405,84505,121676,45050,5413,31229,0,0,0,0,4875],[0,30000,0,2125,0,0,0,4812,0,12470,18665,6558],[16230,6870,17680,0,28260,20478,0,0,0,0,0,0]],
+["บริษัท จักรวาลเทปกาว จำกัด",0,248561,125511,123050,497122,3,2,1,0,1,0,[0,0,0,125511,0,0,0,0,0,123050,0,0],[0,123050,0,2461,0,0,0,0,0,0,0,0],[0,0,123050,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด 64การพิมพ์",0,250597.5,209610.11,33681,493888.61,22,15,3,0,0,0,[0,18694,22890,21773,31252,17699,10083,56362,6693,41340,17117,6693],[20273,44809,0,6693,52714,12540,14820,42086,9405,0,6270,0],[9156,0,0,0,0,0,0,13625,0,10900,0,0]],
+["ห้างหุ้นส่วนจำกัด กิจเจริญ เลเบล แอนด์ พริ้น",0,0,297255.3,189420.26,486675.56,0,7,4,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,145853,56375,73028,0,0,22000],[43560,97175,0,0,0,0,48685,0,0,0,0,0]],
+["บริษัท แสงตะวันการพิมพ์ (1994) จำกัด",0,0,100944.25,325644.75,426589,0,9,20,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,9832,15732,32117,13766,29498,0,0,0],[11799,15732,90459,0,23339,31826,36070,57287,29704,10609,18819,0]],
+["บริษัท ไห่หยาง จำกัด",0,209720,176490,0,386210,9,8,0,1,0,0,[0,36380,36380,0,18190,39590,0,0,39590,0,39590,0],[59385,18130,19795,19795,19795,0,19795,0,19795,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอ เอ็ม ดี โมทีฟ จำกัด",0,155255,140645,35820,331720,14,20,7,0,0,0,[0,0,2520,12600,12600,0,32160,17640,25200,13580,38955,0],[0,20910,4800,10575,0,3360,13065,5760,15680,26600,39895,0],[9180,0,4560,4560,0,10080,5040,0,0,2400,0,0]],
+["บริษัท เตตราพาร์ค เทคโนโลยี (ประเทศไทย) จำกัด",0,0,324516,4900,329416,0,17,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,58860,211266,0,25370,4900,0,4900,9610,9610],[4900,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท วายซี ซัพพลาย พริ้นท์ติ้ง จำกัด",0,30012.5,175772,121091,326875.5,7,14,12,0,0,0,[0,0,8575,4200,4375,0,4288,0,4288,4288,0,0],[4375,0,8750,0,74375,0,32375,7375,8750,16500,7200,16072],[54801,4040,3000,20625,3000,32625,0,3000,0,0,0,0]],
+["บริษัท วิน เพกซ์ จำกัด",0,288982,19190,0,308172,35,1,0,0,0,0,[74862,99428,33222,34430,3320,1500,0,28320,7250,3750,2900,0],[0,0,19190,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอส.ดับบลิว.กราฟฟิค จำกัด",0,307776,0,0,307776,15,0,0,0,0,0,[35710,86360,11440,63926,60340,8800,36800,4400,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท คอนเซ็พ เลเบล จำกัด",0,0,291686.5,14760,306446.5,0,18,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,47016,52126,96016,83226,13302,0],[0,14760,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท คิงออฟแอดเวอร์ไทซิ่งแอนด์กราฟฟิค จำกัด",0,160185,73425,61925,295535,21,14,10,0,0,0,[19560,17325,4785,20790,9570,0,19470,20125,27605,9405,11550,0],[0,14190,7260,11385,0,0,6930,9240,4620,5280,9900,4620],[0,11240,14355,0,6930,7920,3000,4620,11550,0,2310,0]],
+["บริษัท ดิจิโปร จำกัด",0,0,89550,189050,278600,0,15,24,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,11940,0,17910,11940,11940,23880,11940],[11940,41790,5970,38805,27860,0,13930,6965,6965,27860,6965,0]],
+["บริษัท ไคไท่ อินเทลลิเจนท์ ไอเดนทิฟิเคชั่น เทคโนโลยี จำกัด",0,237390.65,20330,0,257720.65,5,1,0,0,0,0,[48836,0,107546,0,0,0,0,43200,0,37808,0,0],[0,0,0,0,0,0,0,0,0,0,20330,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท พี.เจ.พี.อินเตอร์ เทรดดิ้ง จำกัด",0,0,79560,172965,252525,0,6,4,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,17010,0,0,30900,0,0,12150,19500],[0,9450,0,51750,0,65515,0,0,46250,0,0,0]],
+["บริษัท ธีรวิชกุล กรุ๊ป จำกัด",0,0,0,230612.5,230612.5,0,0,2,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,230612,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอ็ม ดี ซี ซี จำกัด",0,200234,0,0,200234,15,0,0,0,0,0,[5088,19518,62839,34800,25552,37120,12888,0,0,0,0,2430],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด ดานู การพิมพ์",0,0,118864,80798.65,199662.65,0,22,11,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,4874,4520,3390,24570,18320,0,5210,25100,17000,15880],[5650,0,0,0,14054,0,0,3240,10711,10619,36524,0]],
+["ห้างหุ้นส่วนจำกัด บาร์โค้ด มีเดีย แอนด์ ซัพพลาย สำนักงานใหญ่",0,0,185594.4,0,185594.4,0,13,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,19125,51075,115394,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ชินโคพริ้นติ้ง (ประเทศไทย) จำกัด",0,8850,119620.52,37137.5,165608.02,2,14,10,0,0,0,[0,0,0,0,0,0,0,0,0,0,4275,4575],[0,4050,33900,0,29925,3975,26175,3975,9750,0,7871,0],[6225,3812,3000,0,0,4875,10990,0,3360,0,4875,0]],
+["บริษัท พีบี.พริ้นติ้ง จำกัด",0,0,0,159524,159524,0,0,28,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[2558,14508,3950,39146,17081,40022,4350,1560,6760,23829,5760,0]],
+["บริษัท จี.เอส. สติ๊กเกอร์ แอนด์ ซัพพลาย จำกัด",0,0,147697.5,11176.5,158874,0,34,9,0,1,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,34742,29302,16500,16335,7770,28348,10355,935,3410,0,0],[0,0,990,2100,0,1440,2058,1407,0,2289,892,0]],
+["บริษัท ก.การพิมพ์แอนด์สติ๊กเกอร์ทันใจ จำกัด",0,10045,17100,114995,142140,6,8,16,0,0,0,[0,910,5544,0,0,511,0,0,0,0,0,3080],[0,2610,0,0,0,0,0,0,0,3780,3990,6720],[11760,5530,18840,23940,0,0,7180,30125,0,10935,6685,0]],
+["บริษัท คลาสิคสแกน จำกัด",0,0,0,133090,133090,0,0,12,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,3465,35805,17110,35170,6720,0,4480,4480,25860,0]],
+["โรจน์ศิลป โฆษณา (สำนักงานใหญ่)",0,0,51020,75000,126020,0,4,5,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,1020,15000,0,15000,20000,0],[0,15000,0,15000,0,15000,0,15000,15000,0,0,0]],
+["บริษัท ราชาการพิมพ์ (2002) จำกัด",0,50100,27000,48000,125100,4,2,3,0,0,0,[0,9600,13500,0,0,0,13500,0,0,0,13500,0],[0,0,13500,0,0,0,0,0,13500,0,0,0],[0,12000,0,0,0,12000,0,0,24000,0,0,0]],
+["บริษัท วัน โอ ไฟว์ ดิจิตอลพริ้นติ้ง จำกัด",0,62430,21472.5,25245,109147.5,11,5,4,0,0,0,[0,0,22400,3200,0,20000,4290,3960,2310,0,6270,0],[1920,5362,0,0,0,0,2310,0,0,0,5940,5940],[0,5940,3465,0,5940,9900,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด 105 ก๊อปปี้ ทู ปริ้นท์ ",1,74020,27720,0,101740,9,5,0,0,0,0,[0,8000,20000,8460,11160,18480,0,0,0,0,7920,0],[0,0,0,0,7920,3960,7920,7920,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท พี.เอส.ซัคเซส พริ้นติ้ง จำกัด",0,17218.75,43159.5,39764,100142.25,11,15,6,0,0,0,[0,0,0,3840,2240,0,0,3420,3088,569,4062,0],[0,5200,1872,0,1950,3785,8087,6435,3880,2430,5880,3640],[5742,10502,18240,0,0,0,2970,2310,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด ก้าวนำ โฆษณา",0,0,9690,81600,91290,0,4,7,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1530,0,0,1530,1530,0,5100],[0,25500,10200,10200,0,15300,0,5100,0,15300,0,0]],
+["บริษัท ไทม์ ลาเบล จำกัด",0,0,66642.5,16710,83352.5,0,3,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,28358,16815,21470,0,0],[0,0,0,0,16710,0,0,0,0,0,0,0]],
+["บริษัท เค.ที.อินเตอร์ ซัพพลาย จำกัด",0,67438.75,15369,0,82807.75,17,3,0,0,0,0,[0,0,0,0,0,0,0,32855,6000,4380,4050,20154],[15369,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ยูบิเทค โซลูชั่น จำกัด",0,65624,16020,0,81644,7,2,0,0,0,0,[22562,33812,0,0,9250,0,0,0,0,0,0,0],[0,0,0,16020,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท สยาม นีโอ ลาเบล จำกัด",0,77355,0,0,77355,6,0,0,0,0,0,[0,3080,0,0,0,7975,0,8400,16500,33000,8400,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ไทยลาเบลล์ อาร์ต แอนด์ พริ้นติ้ง จำกัด",0,74476.5,0,0,74476.5,10,0,0,0,0,0,[0,6965,11868,0,6468,2985,15920,0,0,6464,11868,11940],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอ็ม จี.เพอร์มาเน้นท์ จำกัด ",1,65813.5,0,0,65813.5,3,0,0,0,0,0,[0,0,0,0,0,0,51888,13926,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เมก้าเปเปอร์ แอนด์ ปริ้นท์ จำกัด",0,61164.5,0,0,61164.5,3,0,0,0,0,0,[0,0,0,0,3874,36960,20330,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ที.เจ. ลาเบล แอนด์ ริบบ้อน จำกัด",0,58150,0,0,58150,9,0,0,0,0,0,[35545,22605,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด ปรัชญา ราเบล พริ้นติ้ง",0,0,30355,25555,55910,0,5,3,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,4180,5655,4180,0,0,0,16340,0],[16435,0,9120,0,0,0,0,0,0,0,0,0]],
+["บริษัท แวนควิซ์ จำกัด",0,54540,0,0,54540,7,0,0,0,0,0,[0,0,0,0,0,0,0,6225,6840,0,4938,36538],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ดิจิเฟล็กซ์ลาเบล จำกัด",0,0,0,52800,52800,0,0,5,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,9600,0,19200,9600,0,14400,0,0,0]],
+["หจก.เอส.พี.คอม อินเตอร์พริ้น",0,41400,0,0,41400,10,0,0,0,0,0,[0,0,11250,12150,9000,9000,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท แอล.บี.เจ. อินเตอร์เทรดดิ้ง จำกัด",0,22440,15840,0,38280,2,2,0,0,0,0,[0,14108,0,0,8332,0,0,0,0,0,0,0],[7920,0,0,7920,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด แฮม คอมพิว ออฟเซท",0,13000,11800,10400,35200,2,2,2,0,0,0,[0,0,0,0,0,5200,0,7800,0,0,0,0],[0,0,0,4000,0,7800,0,0,0,0,0,0],[0,5200,0,5200,0,0,0,0,0,0,0,0]],
+["บริษัท ฟิงเกอร์ปริ้นท์ แกรนด์ จำกัด",0,31500,0,0,31500,1,0,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,31500,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท อินคัม 2004 ครีเอชั่น จำกัด",0,9010,11737.5,10175,30922.5,4,8,5,0,0,0,[0,4840,0,0,2520,0,1650,0,0,0,0,0],[1812,0,2420,2420,2200,0,0,350,1045,0,1140,350],[2090,0,0,2310,1155,0,0,0,0,4620,0,0]],
+["บริษัท เนชั่นไวด์ จำกัด",0,27555,0,0,27555,2,0,0,0,0,0,[0,0,19470,0,0,0,8085,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท บางกอก โลจิสติกส์ จำกัด",0,0,25000,0,25000,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,25000,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท วิสดอม ฟอเรส ดิจิตอล จำกัด ",1,24711,0,0,24711,7,0,0,0,0,0,[13590,4256,0,0,2340,0,0,2775,0,0,1750,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ศิริวัฒนาอินเตอร์พริ้นท์ จำกัด (มหาชน)",0,22500,0,0,22500,3,0,0,0,0,0,[0,0,0,0,0,4500,0,9000,9000,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท พีพี ลาเบล แอนด์ แพค จำกัด",0,0,21450,0,21450,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[21450,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท บีเอ บาร์โค้ด เทคโนโลยี จำกัด",0,0,20520,0,20520,0,2,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,12312,8208,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ทอปปังเอจ (ประเทศไทย) จำกัด",0,0,13725,6720,20445,0,1,1,0,1,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,13725,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,6720,0,0]],
+["บริษัท ทวีทรัพย์ แพคเกจจิ้ง จำกัด ",1,19783.68,0,0,19783.68,3,0,0,0,0,0,[0,0,8832,4328,6624,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท กีรติ การพิมพ์ จำกัด",0,0,8500,11000,19500,0,3,4,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,2500,0,0,0,3000,0,0,3000],[0,2500,0,0,3500,0,0,2500,0,0,2500,0]],
+["บริษัท ยี่เหนิง เทคโนโลยี จำกัด",0,19425,0,0,19425,1,0,0,0,0,0,[0,0,0,0,0,0,19425,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท บี.ซี.เลเบลพริ้นท์ จำกัด",0,0,0,19200,19200,0,0,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,19200,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอ.เอส.ที คลีนเลเบิ้ล จำกัด",0,2430,3865,11835,18130,1,3,5,0,0,0,[0,0,0,0,2430,0,0,0,0,0,0,0],[0,1092,0,0,0,0,1092,0,0,0,1680,0],[0,0,1680,6795,0,0,1680,0,0,0,1680,0]],
+["บริษัท 56 ดีไซต์ จำกัด",0,17350,0,0,17350,1,0,0,0,0,0,[0,0,0,0,0,0,0,0,17350,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ลาเบลเทค แมซซีนเนอรี่ จำกัด",0,0,13760,3440,17200,0,1,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,13760],[3440,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท คีแมค จำกัด",0,0,16275,0,16275,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,16275,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท สติ๊กเกอร์ แอนด์ เลเบิ้ล จำกัด",0,3850,12069,0,15919,1,2,0,0,0,0,[0,3850,0,0,0,0,0,0,0,0,0,0],[0,0,8019,0,0,0,0,0,0,0,0,4050],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท อิมเมจ อาร์ต จำกัด",0,0,0,9600,9600,0,0,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,9600,0,0,0,0,0,0]],
+["บริษัท มิลเลี่ยน โพลีซีล อินดัสตรี้ จำกัด",0,0,0,8976,8976,0,0,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[8976,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เจ.เอส.ลาเบล แอนด์ ซัพพลาย จำกัด",0,0,5940,2970,8910,0,2,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,2970,0,0,0,0,0,0,2970],[0,0,0,0,0,2970,0,0,0,0,0,0]],
+["บริษัท ริบบอน(ไทยแลนด์) จำกัด",0,8190,0,0,8190,1,0,0,0,0,0,[0,0,0,0,0,8190,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท บลูจีนี่ จำกัด ",1,8160,0,0,8160,2,0,0,0,0,0,[8160,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด พี.เค.พี.พริ้นติ้ง เซ็นเตอร์",0,0,7210.5,0,7210.5,0,2,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,7210,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอเชีย แคปส (ไทยแลนด์) จำกัด",0,6964.5,0,0,6964.5,2,0,0,0,0,0,[0,0,0,0,0,6964,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด พีดับบลิวพี พริ้นติ้ง",0,0,6370,0,6370,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,6370,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["กอบคำการพิมพ์",0,5500,0,0,5500,1,0,0,0,0,0,[0,0,0,5500,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เอสเคเอส แพค พริ้นท์ จำกัด",0,0,0,4600,4600,0,0,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,4600,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด เท็นวัน พริ้นติ้ง",0,2000,2000,0,4000,2,2,0,0,0,0,[0,0,0,0,0,0,0,0,0,2000,0,0],[1000,0,0,0,0,0,1000,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด สุทธิสุพริ้นเทค",0,0,0,3840,3840,0,0,2,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1440,2400,0,0,0,0,0]],
+["หมึก เข้มการพิมพ์",0,0,0,3300,3300,0,0,1,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,3300,0,0,0,0]],
+["บริษัท ซิสคอน ฉลากและแพคเกจจิ้ง จำกัด",0,2730,0,0,2730,2,0,0,0,0,0,[1890,0,0,840,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท นิวนำชวน พริ้นติ้ง จำกัด",0,2700,0,0,2700,2,0,0,0,0,0,[0,0,0,2700,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท อินเตอร์พ้อยท์ มาร์เก็ตติ้ง จำกัด",0,2405.7,0,0,2405.7,1,0,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,2406,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท ก.การพิมพ์แอนต์สติ๊กเกอร์ทันใจ จำกัด",0,0,1942.5,0,1942.5,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,1942,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท พิมพ์รุ่ง อินเตอร์ พริ้นท์ จำกัด",0,1800,0,0,1800,1,0,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,1800],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เจที ซัคเซส โปรเจค จำกัด",0,1650,0,0,1650,1,0,0,0,0,0,[1650,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท จี แอนด์ จี ปริ้น จำกัด",0,0,1650,0,1650,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[1650,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["ห้างหุ้นส่วนจำกัด ธนากรกิจการพิมพ์",0,0,1200,0,1200,0,1,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,1200,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท เมกะแพ็คเทค จำกัด",0,1176,0,0,1176,1,0,0,0,0,0,[0,0,0,0,0,0,0,0,0,0,1176,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]],
+["บริษัท โพรดิวส์ลาเบล แอนด์ ริบบอน จำกัด",0,0,0,0,0,0,0,0,1,0,0,[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0]]
+],"a":[
+["2024",4739,"2024-10-05","IV6710149","บริษัท ไห่หยาง จำกัด","MissingAmount"],
+["2024",4741,"2024-10-07","IV6710172","บริษัท พิมพ์ถูก พิมพ์ดี 69 จำกัด","MissingAmount"],
+["2024",4743,"2024-10-07","IV6710173","บริษัท พิมพ์ถูก พิมพ์ดี 69 จำกัด","MissingAmount"],
+["2024",5157,"2024-10-31","IV6710866","บริษัท โพรดิวส์ลาเบล แอนด์ ริบบอน จำกัด","MissingAmount"],
+["2024",5941,"2024-12-07","IV6712184","บริษัท เคเค.โปรเจค สติกเกอร์ แอนด์ พริ้นท์ จำกัด","MissingAmount"],
+["2024",5983,"2024-12-11","6712268","บริษัท ดิจิแพค จำกัด","InvalidDocNo"],
+["2024",5983,"2024-12-11","6712268","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2024",6117,"2024-12-18","IV6712467","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",506,"2025-01-27","IV6801658","บริษัท พิมพ์ถูก พิมพ์ดี 69 จำกัด","MissingAmount"],
+["2025",744,"2025-02-06","IV6802165","บริษัท คิง แพคเกจจิ้ง จำกัด","MissingAmount"],
+["2025",762,"2025-02-06","IV6802174","บริษัท เวลทรอน คอร์ปอเรชั่น จำกัด","MissingAmount"],
+["2025",966,"2025-02-17","IV6802467","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",968,"2025-02-17","IV6802468","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1282,"2025-02-28","IV6802896","บริษัท มาสเตอร์ ฟอร์ม อินดัสตรี้ จำกัด","MissingAmount"],
+["2025",1312,"2025-03-01","IV6803016","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1320,"2025-03-01","IV6803026","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1628,"2025-03-14","IV6803465","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1848,"2025-03-22","IV6803777","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1882,"2025-03-24","IV6803812","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1932,"2025-03-26","IV6803902","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",1994,"2025-03-28","IV6803986","ห้างหุ้นส่วนจำกัด อิตัลพริ้น","MissingAmount"],
+["2025",2412,"2025-04-21","IV6804440","บริษัท ทอปปังเอจ (ประเทศไทย) จำกัด","MissingAmount"],
+["2025",2634,"2025-04-28","IV6804710","บริษัท จักรวาลเทปกาว จำกัด","MissingAmount"],
+["2025",3132,"2025-05-20","IV6805583","บริษัท เอ็มนารา ซัพพลายส์ จำกัด","MissingAmount"],
+["2025",3424,"2025-05-31","IV68051044","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",3462,"2025-06-02","IV6806024","บริษัท แพลททินั่ม อินเตอร์ พริ้น แอนด์ ซัพพลาย จำกัด","MissingAmount"],
+["2025",4302,"2025-07-08","IV6807250","ห้างหุ้นส่วนจำกัด มิตรภาพการพิมพ์1995","MissingAmount"],
+["2025",5238,"2025-08-16","IV6808482     ","บริษัท อินคัม 2004 ครีเอชั่น จำกัด","WhitespaceDocNo"],
+["2025",5552,"2025-08-30","IV6808939","บริษัท ลัคกี้เลเบล แอนด์ สติ๊กเกอร์ จำกัด","MissingAmount"],
+["2025",5876,"2025-09-10","IV6809396","บริษัท แอนท์รูม จำกัด","MissingAmount"],
+["2025",6042,"2025-09-18","IV6809634","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",6044,"2025-09-18","IV6809635","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",6076,"2025-09-19","IV6809673","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",6086,"2025-09-19","IV6809678","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",6150,"2025-09-20","IV6809737","บริษัท จี.เอส. สติ๊กเกอร์ แอนด์ ซัพพลาย จำกัด","MissingAmount"],
+["2025",6900,"2025-10-22","IV6810690","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",7110,"2025-10-30","IV6810974","บริษัท ไอสมาร์ท ลาเบล จำกัด","MissingAmount"],
+["2025",7112,"2025-10-30","IV6810975","บริษัท ไอสมาร์ท ลาเบล จำกัด","MissingAmount"],
+["2025",7192,"2025-11-03","IV6811047","บริษัท นายทำถูก จำกัด","MissingAmount"],
+["2025",7194,"2025-11-03","IV6811048","บริษัท พี แอนด์ พี เซอร์วิส แอนด์ซัพพลาย จำกัด","MissingAmount"],
+["2025",7322,"2025-11-07","IV6811230","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2025",7362,"2025-11-08","IV6811281","บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด","MissingAmount"],
+["2025",7364,"2025-11-08","IV6811282","บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด","MissingAmount"],
+["2025",7416,"2025-11-11","IV6811349","บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด","MissingAmount"],
+["2025",7460,"2025-11-12","IV6811394","บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด","MissingAmount"],
+["2025",7462,"2025-11-12","IV6811395","บริษัท ไอเบรน แอดวานซ์ แอนด์ เทคโนโลยี จำกัด","MissingAmount"],
+["2025",7518,"2025-11-15","IV6811523","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2026",798,"2026-02-06","IV6902176 ","บริษัท มาสเตอร์ ฟอร์ม อินดัสตรี้ จำกัด","WhitespaceDocNo"],
+["2026",1992,"2026-04-03","IV6904109","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2026",2534,"2026-05-04","IV6905061","บริษัท ดิจิแพค จำกัด","MissingAmount"],
+["2026",2968,"2026-05-27","IV6905723","บริษัท แอบโซลูท แอ๊ดวานซ์ ซัพพลายเออร์ จำกัด","MissingAmount"],
+["2026",3516,"2026-06-29","IV6906719","บริษัท แพลททินั่ม อินเตอร์ พริ้น แอนด์ ซัพพลาย จำกัด","MissingAmount"],
+["2026",3620,"2026-07-03","IV6907104","บริษัท แอท ซีเคียวริตี้ พริ้นติ้ง จำกัด ","MissingAmount"],
+["2026",3938,"2026-07-22"," IV6907592","บริษัท มาสเตอร์ ฟอร์ม อินดัสตรี้ จำกัด","WhitespaceDocNo"],
+["2026",5110,"2026-09-26","IV6909746","บริษัท ดิจิแพค จำกัด","MissingAmount"]
+]};
+
+  const MONTHS_TH = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+  let currentOverviewPeriod = 'all';
+  let selectedCustomerIdx = 0;
+
+  const CUSTOMERS = RAW_DATA.c.map((r, idx) => ({
+    idx,
+    rank: idx + 1,
+    name: r[0],
+    hasSpace: r[1] === 1,
+    p24: r[2],
+    p25: r[3],
+    p26: r[4],
+    total: r[5],
+    c24: r[6],
+    c25: r[7],
+    c26: r[8],
+    v24: r[9],
+    v25: r[10],
+    v26: r[11],
+    m24: r[12],
+    m25: r[13],
+    m26: r[14],
+    diff25: r[3] - r[2],
+    pct25: r[2] > 0 ? ((r[3] - r[2]) / r[2]) * 100 : (r[3] > 0 ? 100 : 0),
+    diff26: r[4] - r[3],
+    pct26: r[3] > 0 ? ((r[4] - r[3]) / r[3]) * 100 : (r[4] > 0 ? 100 : (r[2] > 0 ? -100 : 0))
+  }));
+
+  const TOTAL_24 = CUSTOMERS.reduce((s, c) => s + c.p24, 0);
+  const TOTAL_25 = CUSTOMERS.reduce((s, c) => s + c.p25, 0);
+  const TOTAL_26 = CUSTOMERS.reduce((s, c) => s + c.p26, 0);
+  const GRAND_TOTAL_3Y = CUSTOMERS.reduce((s, c) => s + c.total, 0);
+
+  function fmtNum(n, dec = 2) {
+    if (n === null || n === undefined || isNaN(n)) return "-";
+    return Number(n).toLocaleString('th-TH', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+  }
+
+  function fmtShort(n) {
+    if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2) + "M";
+    if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(0) + "k";
+    return fmtNum(n, 0);
+  }
+
+  function getThemeColors() {
+    const cs = getComputedStyle(document.body);
+    return {
+      fg: cs.getPropertyValue('--foreground').trim() || '#0f172a',
+      muted: cs.getPropertyValue('--muted-foreground').trim() || '#475569',
+      border: cs.getPropertyValue('--card-border').trim() || '#e2e8f0',
+      card: cs.getPropertyValue('--card').trim() || '#ffffff',
+      c1: cs.getPropertyValue('--chart-1').trim() || '#2563eb',
+      c2: cs.getPropertyValue('--chart-2').trim() || '#94a3b8',
+      c3: cs.getPropertyValue('--chart-3').trim() || '#10b981',
+      c4: cs.getPropertyValue('--chart-4').trim() || '#f59e0b',
+      err: cs.getPropertyValue('--error').trim() || '#dc2626'
+    };
+  }
+
+  let currentActivePage = 'overview';
+
+  function switchPage(page) {
+    currentActivePage = page;
+    ['overview', 'customers', 'issues'].forEach(p => {
+      const el = document.getElementById('page-' + p);
+      el.classList.toggle('hidden', p !== page);
+      el.classList.remove('print-page-break');
+      const btn = document.getElementById('tab-' + p);
+      if (p === page) {
+        btn.classList.add('tab-btn-active');
+        btn.classList.remove('text-[var(--muted-foreground)]');
+      } else {
+        btn.classList.remove('tab-btn-active');
+        btn.classList.add('text-[var(--muted-foreground)]');
+      }
+    });
+    const pageMeta = {
+      overview: { badge: 'หน้า 1 / 3', title: 'สรุปภาพรวมยอดขาย (2024–2026)' },
+      customers: { badge: 'หน้า 2 / 3', title: 'กราฟและตารางยอดขายลูกค้าแต่ละเจ้า (ครบ 123 ราย)' },
+      issues: { badge: 'หน้า 3 / 3', title: 'สรุปปัญหาด้านยอดขายและความเสี่ยงทางธุรกิจ' }
+    };
+    if (pageMeta[page]) {
+      const bEl = document.getElementById('active-page-badge');
+      const tEl = document.getElementById('active-page-title');
+      if (bEl) bEl.textContent = pageMeta[page].badge;
+      if (tEl) tEl.textContent = pageMeta[page].title;
+    }
+    if (page === 'overview') renderOverview();
+    if (page === 'customers') {
+      renderCustomerDetail();
+      renderCustomerSection();
+    }
+    if (page === 'issues') renderIssuesPage();
+  }
+
+  function exportPDF(mode) {
+    const savedPage = currentActivePage;
+    if (mode === 'all') {
+      ['overview', 'customers', 'issues'].forEach((p, idx) => {
+        const el = document.getElementById('page-' + p);
+        el.classList.remove('hidden');
+        if (idx > 0) el.classList.add('print-page-break');
+      });
+      const bEl = document.getElementById('active-page-badge');
+      const tEl = document.getElementById('active-page-title');
+      if (bEl) bEl.textContent = 'รายงานครบ 3 หน้า';
+      if (tEl) tEl.textContent = 'Dashboard สรุปยอดขาย ลูกค้ารายเจ้า และสรุปปัญหา (2024–2026)';
+      renderOverview();
+      renderCustomerDetail();
+      renderCustomerSection();
+      renderIssuesPage();
+    } else {
+      if (savedPage === 'overview') drawOverviewMonthlyCanvas();
+      if (savedPage === 'customers') renderCustomerDetail();
+    }
+
+    setTimeout(() => {
+      window.print();
+      if (mode === 'all') {
+        setTimeout(() => switchPage(savedPage), 300);
+      }
+    }, 200);
+  }
+
+  function quickCustomerFilter(grp) {
+    const fEl = document.getElementById('cust-filter-group');
+    if (fEl) fEl.value = grp;
+    switchPage('customers');
+  }
+
+  function jumpToCustomer(idx) {
+    selectedCustomerIdx = idx;
+    document.getElementById('cust-selector').value = String(idx);
+    switchPage('customers');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ============================================================================
+  // PAGE 1: OVERVIEW LOGIC
+  // ============================================================================
+  function setOverviewPeriod(p) {
+    currentOverviewPeriod = p;
+    ['all', '2024', '2025', '2026', '10m'].forEach(k => {
+      const b = document.getElementById('ov-btn-' + k);
+      if (k === p) {
+        b.classList.add('sub-btn-active');
+        b.classList.remove('text-[var(--muted-foreground)]');
+      } else {
+        b.classList.remove('sub-btn-active');
+        b.classList.add('text-[var(--muted-foreground)]');
+      }
+    });
+    renderOverview();
+  }
+
+  function sumYearRange(yr, maxMonth = 12) {
+    const arr = RAW_DATA.ym[yr].slice(0, maxMonth);
+    return arr.reduce((acc, r) => ({
+      pre: acc.pre + r[0],
+      vat: acc.vat + r[1],
+      tot: acc.tot + r[2],
+      bills: acc.bills + r[3],
+      voids: acc.voids + r[4]
+    }), { pre: 0, vat: 0, tot: 0, bills: 0, voids: 0 });
+  }
+
+  function renderOverview() {
+    const s24 = sumYearRange('2024', 12);
+    const s25 = sumYearRange('2025', 12);
+    const s26 = sumYearRange('2026', 12);
+    const s24_10 = sumYearRange('2024', 10);
+    const s25_10 = sumYearRange('2025', 10);
+    const s26_10 = sumYearRange('2026', 10);
+
+    let cur, label, subCompare;
+    if (currentOverviewPeriod === 'all') {
+      cur = {
+        pre: s24.pre + s25.pre + s26.pre,
+        vat: s24.vat + s25.vat + s26.vat,
+        tot: s24.tot + s25.tot + s26.tot,
+        bills: s24.bills + s25.bills + s26.bills,
+        voids: s24.voids + s25.voids + s26.voids,
+        activeCust: CUSTOMERS.filter(c => c.total > 0).length
+      };
+      label = "รวม 3 ปี (2024–2026)";
+      subCompare = "เฉลี่ยต่อปี 49.73M บาท";
+    } else if (currentOverviewPeriod === '2024') {
+      cur = { ...s24, activeCust: CUSTOMERS.filter(c => c.p24 > 0).length };
+      label = "ปี 2024 (เต็มปี)";
+      subCompare = "ฐานปีเริ่มต้น (12 เดือน)";
+    } else if (currentOverviewPeriod === '2025') {
+      cur = { ...s25, activeCust: CUSTOMERS.filter(c => c.p25 > 0).length };
+      label = "ปี 2025 (เต็มปี)";
+      subCompare = "+30.16% เทียบปี 2024 (+14.12M)";
+    } else if (currentOverviewPeriod === '2026') {
+      cur = { ...s26, activeCust: CUSTOMERS.filter(c => c.p26 > 0).length };
+      label = "ปี 2026 (ม.ค.–17 พ.ย.)";
+      subCompare = "-31.96% เทียบปี 2025 ทั้งปี";
+    } else {
+      cur = { ...s26_10, activeCust: CUSTOMERS.filter(c => c.m26.slice(0,10).reduce((a,b)=>a+b,0) > 0).length };
+      label = "ปี 2026 (10 เดือนแรก ม.ค.–ต.ค.)";
+      subCompare = "-25.54% เทียบ 10 เดือนปี 2025 (52.34M)";
+    }
+
+    const avgBill = cur.bills > 0 ? cur.pre / cur.bills : 0;
+    const digipackVal = currentOverviewPeriod === '2024' ? CUSTOMERS[0].p24 :
+                        currentOverviewPeriod === '2025' ? CUSTOMERS[0].p25 :
+                        currentOverviewPeriod === '2026' ? CUSTOMERS[0].p26 :
+                        currentOverviewPeriod === '10m' ? CUSTOMERS[0].m26.slice(0,10).reduce((a,b)=>a+b,0) :
+                        CUSTOMERS[0].total;
+    const digipackShare = cur.pre > 0 ? (digipackVal / cur.pre) * 100 : 0;
+
+    const kpiHtml = [
+      { title: "ยอดขายก่อนภาษี (" + label + ")", val: "฿" + fmtNum(cur.pre, 2), sub: subCompare },
+      { title: "ยอดขายสุทธิ (รวม VAT 7%)", val: "฿" + fmtNum(cur.tot, 2), sub: "ภาษีขาย: ฿" + fmtNum(cur.vat, 2) },
+      { title: "จำนวนบิลขายจริง", val: fmtNum(cur.bills, 0) + " บิล", sub: "เฉลี่ย ฿" + fmtNum(avgBill, 2) + " / บิล" },
+      { title: "ลูกค้าที่มียอดซื้อ (Active)", val: cur.activeCust + " ราย", sub: "จากทะเบียนทั้งหมด 123 รายชื่อ" },
+      { title: "สัดส่วนอันดับ 1 (บจก.ดิจิแพค)", val: digipackShare.toFixed(1) + "%", sub: "฿" + fmtNum(digipackVal, 2) },
+      { title: "บิลว่าง/ยกเลิกในระบบ", val: cur.voids + " บิล", sub: "ไม่มีมูลค่าเงินในตาราง Sheet" }
+    ].map(k => `
+      <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 space-y-1">
+        <div class="text-xs text-[var(--muted-foreground)] truncate">${k.title}</div>
+        <div class="text-base md:text-lg font-bold font-mono tabular-nums text-[var(--foreground)]">${k.val}</div>
+        <div class="text-xs text-[var(--muted-foreground)] truncate">${k.sub}</div>
+      </div>
+    `).join('');
+    document.getElementById('ov-kpi-grid').innerHTML = kpiHtml;
+
+    // Pareto bars
+    const top1 = CUSTOMERS[0].total;
+    const top2_5 = CUSTOMERS.slice(1, 5).reduce((s, c) => s + c.total, 0);
+    const top6_15 = CUSTOMERS.slice(5, 15).reduce((s, c) => s + c.total, 0);
+    const rest = CUSTOMERS.slice(15).reduce((s, c) => s + c.total, 0);
+    const paretoItems = [
+      { label: "อันดับ 1: บจก. ดิจิแพค (1 ราย)", val: top1, pct: (top1 / GRAND_TOTAL_3Y) * 100, color: "var(--chart-1)" },
+      { label: "อันดับ 2–5: ลูกค้าหลักรอง (4 ราย)", val: top2_5, pct: (top2_5 / GRAND_TOTAL_3Y) * 100, color: "var(--chart-3)" },
+      { label: "อันดับ 6–15: ลูกค้าขนาดกลาง (10 ราย)", val: top6_15, pct: (top6_15 / GRAND_TOTAL_3Y) * 100, color: "var(--chart-4)" },
+      { label: "อันดับ 16–123: ลูกค้ารายย่อย (108 ราย)", val: rest, pct: (rest / GRAND_TOTAL_3Y) * 100, color: "var(--chart-2)" }
+    ];
+    document.getElementById('ov-pareto-bars').innerHTML = paretoItems.map(p => `
+      <div class="space-y-1">
+        <div class="flex justify-between text-xs">
+          <span class="text-[var(--foreground)] font-medium">${p.label}</span>
+          <span class="font-mono tabular-nums text-[var(--muted-foreground)]">฿${fmtShort(p.val)} (${p.pct.toFixed(1)}%)</span>
+        </div>
+        <div class="w-full h-2.5 bg-[var(--background)] rounded-full overflow-hidden border border-[var(--card-border)]">
+          <div class="h-full rounded-full bar-fill" style="width:${p.pct}%; background:${p.color}"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Yearly mini comparison
+    const maxYrPre = Math.max(s24.pre, s25.pre, s26.pre);
+    document.getElementById('ov-yearly-mini').innerHTML = [
+      { yr: "2024 (12 เดือน)", pre: s24.pre, bills: s24.bills, c: "var(--chart-2)", tag: "ฐานปี 2024" },
+      { yr: "2025 (12 เดือน)", pre: s25.pre, bills: s25.bills, c: "var(--chart-1)", tag: "+30.2% YoY" },
+      { yr: "2026 (ถึง 17 พ.ย.)", pre: s26.pre, bills: s26.bills, c: "var(--chart-3)", tag: "10ด. -25.5%" }
+    ].map(y => `
+      <div class="space-y-1">
+        <div class="flex justify-between text-xs">
+          <span class="font-semibold text-[var(--foreground)]">${y.yr} <span class="text-[var(--muted-foreground)] font-normal">(${y.bills} บิล)</span></span>
+          <span class="font-mono tabular-nums font-semibold">฿${fmtNum(y.pre, 2)}</span>
+        </div>
+        <div class="w-full h-2 bg-[var(--background)] rounded-full overflow-hidden">
+          <div class="h-full rounded-full" style="width:${(y.pre / maxYrPre)*100}%; background:${y.c}"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Monthly Table
+    let tbody = '';
+    for (let m = 0; m < 12; m++) {
+      const r24 = RAW_DATA.ym['2024'][m];
+      const r25 = RAW_DATA.ym['2025'][m];
+      const r26 = RAW_DATA.ym['2026'][m];
+      const yoy25 = r24[0] > 0 ? ((r25[0] - r24[0]) / r24[0]) * 100 : 0;
+      const yoy26 = (m < 11 && r25[0] > 0) ? ((r26[0] - r25[0]) / r25[0]) * 100 : null;
+      tbody += `
+        <tr class="hover:bg-[var(--background)]">
+          <td class="py-1.5 px-2 font-sans font-semibold">${MONTHS_TH[m]}</td>
+          <td class="py-1.5 px-2 text-right">${fmtNum(r24[0], 2)} <span class="text-[var(--muted-foreground)]">(${r24[3]})</span></td>
+          <td class="py-1.5 px-2 text-right">${fmtNum(r25[0], 2)} <span class="text-[var(--muted-foreground)]">(${r25[3]})</span></td>
+          <td class="py-1.5 px-2 text-right ${yoy25 >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]'}">${yoy25 >= 0 ? '+' : ''}${yoy25.toFixed(1)}%</td>
+          <td class="py-1.5 px-2 text-right">${m === 11 ? '<span class="text-[var(--muted-foreground)]">-</span>' : fmtNum(r26[0], 2) + ' <span class="text-[var(--muted-foreground)]">(' + r26[3] + ')</span>'}</td>
+          <td class="py-1.5 px-2 text-right ${yoy26 === null ? '' : (yoy26 >= 0 ? 'text-[var(--success)]' : 'text-[var(--error)]')}">
+            ${yoy26 === null ? '-' : (yoy26 >= 0 ? '+' : '') + yoy26.toFixed(1) + '%'}${m === 10 ? ' <span class="text-[var(--muted-foreground)] font-sans">(17วัน)</span>' : ''}
+          </td>
+        </tr>
+      `;
+    }
+    tbody += `
+      <tr class="border-t-2 border-[var(--border)] font-bold bg-[var(--background)]">
+        <td class="py-2 px-2 font-sans">รวมทั้งปี</td>
+        <td class="py-2 px-2 text-right">${fmtNum(s24.pre, 2)} (${s24.bills})</td>
+        <td class="py-2 px-2 text-right">${fmtNum(s25.pre, 2)} (${s25.bills})</td>
+        <td class="py-2 px-2 text-right text-[var(--success)]">+30.2%</td>
+        <td class="py-2 px-2 text-right">${fmtNum(s26.pre, 2)} (${s26.bills})</td>
+        <td class="py-2 px-2 text-right text-[var(--error)]">-25.5% (10ด.)</td>
+      </tr>
+    `;
+    document.getElementById('ov-monthly-tbody').innerHTML = tbody;
+
+    // Top 10 Customers for selected period
+    const prop = currentOverviewPeriod === '2024' ? 'p24' :
+                 currentOverviewPeriod === '2025' ? 'p25' :
+                 (currentOverviewPeriod === '2026' || currentOverviewPeriod === '10m') ? 'p26' : 'total';
+    const top10 = [...CUSTOMERS].sort((a, b) => b[prop] - a[prop]).slice(0, 10);
+    const maxTop = top10[0] ? top10[0][prop] : 1;
+    document.getElementById('ov-top10-list').innerHTML = top10.map((c, i) => {
+      const val = c[prop];
+      const pct = cur.pre > 0 ? (val / cur.pre) * 100 : 0;
+      return `
+        <div onclick="jumpToCustomer(${c.idx})" class="p-2 rounded-lg hover:bg-[var(--background)] border border-transparent hover:border-[var(--border)] cursor-pointer transition-all space-y-1">
+          <div class="flex items-center justify-between text-xs gap-2">
+            <span class="font-medium text-[var(--foreground)] truncate"><span class="font-mono text-[var(--muted-foreground)] mr-1">${i + 1}.</span>${c.name}</span>
+            <span class="font-mono tabular-nums font-semibold shrink-0">฿${fmtNum(val, 2)} <span class="text-[var(--muted-foreground)] font-normal">(${pct.toFixed(1)}%)</span></span>
+          </div>
+          <div class="w-full h-1.5 bg-[var(--background)] rounded-full overflow-hidden">
+            <div class="h-full rounded-full" style="width:${(val / maxTop) * 100}%; background:var(--chart-1)"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    drawOverviewMonthlyCanvas();
+  }
+
+  function drawOverviewMonthlyCanvas() {
+    const canvas = document.getElementById('monthlyCanvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(rect.width || 680, 520);
+    const h = 270;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const metric = document.getElementById('ov-metric-select').value;
+    const mIdx = metric === 'pre' ? 0 : (metric === 'tot' ? 2 : 3);
+    const colors = getThemeColors();
+
+    const vals24 = RAW_DATA.ym['2024'].map(r => r[mIdx]);
+    const vals25 = RAW_DATA.ym['2025'].map(r => r[mIdx]);
+    const vals26 = RAW_DATA.ym['2026'].map(r => r[mIdx]);
+    const maxVal = Math.max(...vals24, ...vals25, ...vals26, 1) * 1.12;
+
+    const padL = 56, padR = 16, padT = 18, padB = 34;
+    const chartW = w - padL - padR;
+    const chartH = h - padT - padB;
+
+    // Grid lines
+    ctx.strokeStyle = colors.border;
+    ctx.lineWidth = 1;
+    ctx.fillStyle = colors.muted;
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    const steps = 4;
+    for (let i = 0; i <= steps; i++) {
+      const y = padT + (chartH / steps) * i;
+      const v = maxVal * (1 - i / steps);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(w - padR, y);
+      ctx.stroke();
+      ctx.fillText(metric === 'bills' ? Math.round(v) : fmtShort(v), padL - 6, y + 4);
+    }
+
+    const groupW = chartW / 12;
+    const barW = Math.min((groupW - 12) / 3, 16);
+
+    for (let m = 0; m < 12; m++) {
+      const gx = padL + m * groupW + (groupW - barW * 3 - 4) / 2;
+      const series = [
+        { v: vals24[m], c: colors.c2 },
+        { v: vals25[m], c: colors.c1 },
+        { v: vals26[m], c: colors.c3 }
+      ];
+      series.forEach((s, si) => {
+        if (s.v <= 0) return;
+        const bh = (s.v / maxVal) * chartH;
+        const bx = gx + si * (barW + 2);
+        const by = padT + chartH - bh;
+        ctx.fillStyle = s.c;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(bx, by, barW, bh, [3, 3, 0, 0]) : ctx.rect(bx, by, barW, bh);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = colors.fg;
+      ctx.textAlign = 'center';
+      ctx.font = '11px sans-serif';
+      ctx.fillText(MONTHS_TH[m], padL + m * groupW + groupW / 2, h - 10);
+    }
+
+    document.getElementById('ov-month-insight').innerHTML = `
+      <div class="font-semibold text-[var(--foreground)]">💡 ข้อสังเกตสำคัญจากกราฟรายเดือน:</div>
+      <div class="text-[var(--muted-foreground)]">
+        • <strong class="text-[var(--foreground)]">จุดสูงสุด (Peak Month):</strong> ก.ค. 2025 มียอดขายสูงสุดเป็นประวัติการณ์ที่ <strong class="text-[var(--foreground)]">6,139,421.18 บาท (411 บิล)</strong> รองลงมาคือ พ.ค. 2025 (6,101,456.37 บาท)<br/>
+        • <strong class="text-[var(--foreground)]">จุดเปลี่ยนปี 2026:</strong> ช่วง ม.ค.–เม.ย. 2026 ยอดขายยังเกาะกลุ่มปี 2025 ได้ดี (เม.ย. 2026 ทำได้ 5.12M) แต่ตั้งแต่ <strong class="text-[var(--error)]">พ.ค. 2026 เป็นต้นมา ยอดขายลดลงเหลือ 3.20M–3.83M/เดือน</strong> เนื่องจาก บจก. ไอสมาร์ท ลาเบล หยุดสั่งซื้อตั้งแต่ ก.ค. 2026 และ บจก. ดิจิแพค ลดปริมาณสั่งซื้อลง
+      </div>
+    `;
+  }
+
+  // ============================================================================
+  // PAGE 2: CUSTOMERS & INDIVIDUAL CHARTS
+  // ============================================================================
+  function initCustomerSelector() {
+    const sel = document.getElementById('cust-selector');
+    sel.innerHTML = CUSTOMERS.map(c =>
+      `<option value="${c.idx}">#${c.rank} ${c.name} — รวม ฿${fmtNum(c.total, 2)}</option>`
+    ).join('');
+  }
+
+  function selectCustomer(idx) {
+    selectedCustomerIdx = idx;
+    document.getElementById('cust-selector').value = String(idx);
+    renderCustomerDetail();
+  }
+
+  function getCustomerStatusBadge(c) {
+    const share3Y = ((c.total / GRAND_TOTAL_3Y) * 100).toFixed(2);
+    if (c.total === 0) {
+      return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--error)] text-[var(--primary-foreground)]">บิลยกเลิก 100.00% (สัดส่วน 0.00%)</span>`;
+    }
+    if (c.p26 === 0 && c.p25 > 0) {
+      return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--error)] text-[var(--primary-foreground)]">ลดลง -100.00% (หยุดซื้อปี 26)</span>`;
+    }
+    if (c.p26 === 0 && c.p25 === 0 && c.p24 > 0) {
+      return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--error)] text-[var(--primary-foreground)]">ลดลง -100.00% (หยุดตั้งแต่ปี 25)</span>`;
+    }
+    if (c.p24 === 0 && c.p25 === 0 && c.p26 > 0) {
+      const sh26 = ((c.p26 / TOTAL_26) * 100).toFixed(2);
+      return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--success)] text-[var(--primary-foreground)]">ใหม่ปี 26 +100.00% (สัดส่วน ${sh26}%)</span>`;
+    }
+    if (c.pct26 > 0) {
+      return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--success)] text-[var(--primary-foreground)]">เพิ่มขึ้น +${c.pct26.toFixed(2)}% (สัดส่วน ${share3Y}%)</span>`;
+    }
+    if (c.pct26 < 0) {
+      const bg = c.pct26 <= -30 ? 'bg-[var(--error)]' : 'bg-[var(--warning)]';
+      return `<span class="px-2 py-0.5 rounded text-xs ${bg} text-[var(--primary-foreground)]">ลดลง ${c.pct26.toFixed(2)}% (สัดส่วน ${share3Y}%)</span>`;
+    }
+    return `<span class="px-2 py-0.5 rounded text-xs bg-[var(--secondary)] text-[var(--secondary-foreground)]">เปลี่ยนแปลง 0.00% (สัดส่วน ${share3Y}%)</span>`;
+  }
+
+  function renderCustomerDetail() {
+    const c = CUSTOMERS[selectedCustomerIdx] || CUSTOMERS[0];
+    document.getElementById('cust-detail-title').innerHTML =
+      `#${c.rank} ${c.name} ${c.hasSpace ? '<span class="text-xs font-normal text-[var(--warning)]">(มีช่องว่างท้ายชื่อ)</span>' : ''}`;
+
+    const share = (c.total / GRAND_TOTAL_3Y) * 100;
+    const totalBills = c.c24 + c.c25 + c.c26;
+    const totalVoids = c.v24 + c.v25 + c.v26;
+
+    const kpis = [
+      { l: "ยอดรวม 3 ปี (ก่อนภาษี)", v: "฿" + fmtNum(c.total, 2), s: `สัดส่วน ${share.toFixed(2)}% ของบริษัท` },
+      { l: "ยอดขายปี 2024", v: "฿" + fmtNum(c.p24, 2), s: `${c.c24} บิลขายจริง` + (c.v24 ? ` (${c.v24} บิลว่าง)` : '') },
+      { l: "ยอดขายปี 2025", v: "฿" + fmtNum(c.p25, 2), s: `${c.c25} บิลขายจริง` + (c.v25 ? ` (${c.v25} บิลว่าง)` : '') },
+      { l: "ยอดขายปี 2026 (ถึง 17 พ.ย.)", v: "฿" + fmtNum(c.p26, 2), s: `${c.c26} บิลขายจริง` + (c.v26 ? ` (${c.v26} บิลว่าง)` : '') },
+      { l: "เปลี่ยนแปลง (2026 vs 2025)", v: (c.diff26 >= 0 ? "+" : "") + "฿" + fmtNum(c.diff26, 2), s: c.p25 > 0 ? `${c.pct26 >= 0 ? '+' : ''}${c.pct26.toFixed(1)}% YoY` : "ไม่มีฐานปี 2025" },
+      { l: "จำนวนบิลรวม / เฉลี่ยต่อบิล", v: `${totalBills} บิล`, s: totalBills > 0 ? `เฉลี่ย ฿${fmtNum(c.total / totalBills, 2)}/บิล (บิลว่าง ${totalVoids})` : "มีแต่บิลว่าง" }
+    ];
+
+    document.getElementById('cust-detail-kpis').innerHTML = kpis.map(k => `
+      <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-3 space-y-0.5">
+        <div class="text-xs text-[var(--muted-foreground)] truncate">${k.l}</div>
+        <div class="text-sm md:text-base font-bold font-mono tabular-nums text-[var(--foreground)]">${k.v}</div>
+        <div class="text-xs text-[var(--muted-foreground)] truncate">${k.s}</div>
+      </div>
+    `).join('');
+
+    // Monthly table for selected customer
+    let rowsHtml = '';
+    for (let m = 0; m < 12; m++) {
+      rowsHtml += `
+        <tr>
+          <td class="py-1 font-sans font-medium text-[var(--foreground)]">${MONTHS_TH[m]}</td>
+          <td class="py-1 text-right ${c.m24[m] > 0 ? 'text-[var(--foreground)]' : 'text-[var(--muted-foreground)]'}">${c.m24[m] > 0 ? fmtNum(c.m24[m], 0) : '-'}</td>
+          <td class="py-1 text-right ${c.m25[m] > 0 ? 'text-[var(--foreground)]' : 'text-[var(--muted-foreground)]'}">${c.m25[m] > 0 ? fmtNum(c.m25[m], 0) : '-'}</td>
+          <td class="py-1 text-right ${c.m26[m] > 0 ? 'text-[var(--foreground)] font-semibold' : 'text-[var(--muted-foreground)]'}">${c.m26[m] > 0 ? fmtNum(c.m26[m], 0) : '-'}</td>
+        </tr>
+      `;
+    }
+    document.getElementById('cust-detail-month-tbody').innerHTML = rowsHtml;
+
+    drawCustomerMonthlyCanvas(c);
+  }
+
+  function drawCustomerMonthlyCanvas(c) {
+    const canvas = document.getElementById('custMonthlyCanvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = Math.max(rect.width || 600, 460);
+    const h = 230;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const colors = getThemeColors();
+    const maxVal = Math.max(...c.m24, ...c.m25, ...c.m26, 1000) * 1.15;
+    const padL = 54, padR = 14, padT = 16, padB = 30;
+    const chartW = w - padL - padR;
+    const chartH = h - padT - padB;
+
+    ctx.strokeStyle = colors.border;
+    ctx.lineWidth = 1;
+    ctx.fillStyle = colors.muted;
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'right';
+    for (let i = 0; i <= 4; i++) {
+      const y = padT + (chartH / 4) * i;
+      const v = maxVal * (1 - i / 4);
+      ctx.beginPath();
+      ctx.moveTo(padL, y);
+      ctx.lineTo(w - padR, y);
+      ctx.stroke();
+      ctx.fillText(fmtShort(v), padL - 6, y + 4);
+    }
+
+    const groupW = chartW / 12;
+    const barW = Math.min((groupW - 10) / 3, 14);
+
+    for (let m = 0; m < 12; m++) {
+      const gx = padL + m * groupW + (groupW - barW * 3 - 4) / 2;
+      const s = [
+        { v: c.m24[m], col: colors.c2 },
+        { v: c.m25[m], col: colors.c1 },
+        { v: c.m26[m], col: colors.c3 }
+      ];
+      s.forEach((item, si) => {
+        if (item.v <= 0) return;
+        const bh = Math.max((item.v / maxVal) * chartH, 2);
+        const bx = gx + si * (barW + 2);
+        const by = padT + chartH - bh;
+        ctx.fillStyle = item.col;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(bx, by, barW, bh, [2, 2, 0, 0]) : ctx.rect(bx, by, barW, bh);
+        ctx.fill();
+      });
+
+      ctx.fillStyle = colors.fg;
+      ctx.textAlign = 'center';
+      ctx.fillText(MONTHS_TH[m], padL + m * groupW + groupW / 2, h - 8);
+    }
+  }
+
+  function renderCustomerSection() {
+    const q = (document.getElementById('cust-search').value || '').trim().toLowerCase();
+    const grp = document.getElementById('cust-filter-group').value;
+    const sortBy = document.getElementById('cust-sort-by').value;
+
+    let list = CUSTOMERS.filter(c => {
+      if (q && !c.name.toLowerCase().includes(q)) return false;
+      if (grp === 'top20') return c.rank <= 20;
+      if (grp === 'top50') return c.rank <= 50;
+      if (grp === 'drop') return c.p25 > 0 && c.p26 > 0 && c.diff26 < 0;
+      if (grp === 'churn') return (c.p24 > 0 || c.p25 > 0) && c.p26 === 0;
+      if (grp === 'grow') return c.p26 > c.p25 && c.p26 > 0;
+      if (grp === 'new26') return c.p24 === 0 && c.p25 === 0 && c.p26 > 0;
+      if (grp === 'dataissue') return c.hasSpace || (c.v24 + c.v25 + c.v26 > 0) || c.name.includes('ก.การพิมพ์แอน');
+      return true;
+    });
+
+    list.sort((a, b) => {
+      if (sortBy === 'p26') return b.p26 - a.p26;
+      if (sortBy === 'p25') return b.p25 - a.p25;
+      if (sortBy === 'p24') return b.p24 - a.p24;
+      if (sortBy === 'diff26') return a.diff26 - b.diff26;
+      if (sortBy === 'grow26') return b.diff26 - a.diff26;
+      return b.total - a.total;
+    });
+
+    document.getElementById('cust-filter-count').textContent = `แสดงลูกค้า ${list.length} ราย (จากทั้งหมด 123 ราย)`;
+
+    const maxBarTotal = list.reduce((m, c) => Math.max(m, c.total, 1), 1);
+
+    // Render Horizontal Bar Chart for every customer in filtered list
+    document.getElementById('cust-bars-container').innerHTML = list.map(c => {
+      const w24 = (c.p24 / maxBarTotal) * 100;
+      const w25 = (c.p25 / maxBarTotal) * 100;
+      const w26 = (c.p26 / maxBarTotal) * 100;
+      const isSelected = c.idx === selectedCustomerIdx;
+      return `
+        <div onclick="selectCustomer(${c.idx})" class="p-2.5 rounded-lg border ${isSelected ? 'border-[var(--primary)] bg-[var(--background)]' : 'border-[var(--card-border)] hover:border-[var(--border)] bg-[var(--background)]'} cursor-pointer transition-all space-y-1.5">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="font-mono text-[var(--muted-foreground)] w-7 shrink-0">#${c.rank}</span>
+              <span class="font-semibold text-[var(--foreground)] truncate">${c.name}</span>
+              ${getCustomerStatusBadge(c)}
+            </div>
+            <div class="flex items-center gap-3 font-mono tabular-nums text-xs shrink-0">
+              <span class="text-[var(--muted-foreground)]">2024: <strong class="text-[var(--foreground)]">${fmtShort(c.p24)}</strong></span>
+              <span class="text-[var(--muted-foreground)]">2025: <strong class="text-[var(--foreground)]">${fmtShort(c.p25)}</strong></span>
+              <span class="text-[var(--muted-foreground)]">2026: <strong class="text-[var(--foreground)]">${fmtShort(c.p26)}</strong></span>
+              <span class="font-bold text-[var(--foreground)]">รวม: ฿${fmtNum(c.total, 2)}</span>
+            </div>
+          </div>
+          <div class="w-full h-3 bg-[var(--card)] rounded-full overflow-hidden flex">
+            <div class="h-full bar-fill" style="width:${w24}%; background:var(--chart-2)" title="2024: ฿${fmtNum(c.p24)}"></div>
+            <div class="h-full bar-fill" style="width:${w25}%; background:var(--chart-1)" title="2025: ฿${fmtNum(c.p25)}"></div>
+            <div class="h-full bar-fill" style="width:${w26}%; background:var(--chart-3)" title="2026: ฿${fmtNum(c.p26)}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Render Full Table
+    document.getElementById('cust-table-tbody').innerHTML = list.map(c => {
+      const sh24 = TOTAL_24 > 0 ? (c.p24 / TOTAL_24) * 100 : 0;
+      const sh25 = TOTAL_25 > 0 ? (c.p25 / TOTAL_25) * 100 : 0;
+      const sh26 = TOTAL_26 > 0 ? (c.p26 / TOTAL_26) * 100 : 0;
+      const share = (c.total / GRAND_TOTAL_3Y) * 100;
+
+      const yoy25Str = (c.p24 === 0 && c.p25 === 0)
+        ? '0.00%'
+        : (c.p24 === 0 && c.p25 > 0)
+          ? '+100.00% (ใหม่)'
+          : (c.pct25 >= 0 ? '+' : '') + c.pct25.toFixed(2) + '%';
+      const yoy25Cls = c.pct25 > 0 ? 'text-[var(--success)]' : (c.pct25 < 0 ? 'text-[var(--error)]' : 'text-[var(--muted-foreground)]');
+
+      const yoy26Str = (c.p25 === 0 && c.p26 === 0)
+        ? (c.p24 > 0 ? '-100.00%' : '0.00%')
+        : (c.p25 === 0 && c.p26 > 0)
+          ? '+100.00% (ใหม่)'
+          : (c.pct26 >= 0 ? '+' : '') + c.pct26.toFixed(2) + '%';
+      const yoy26Cls = c.pct26 > 0 ? 'text-[var(--success)]' : (c.pct26 < 0 ? 'text-[var(--error)]' : 'text-[var(--muted-foreground)]');
+
+      return `
+        <tr onclick="selectCustomer(${c.idx})" class="hover:bg-[var(--background)] cursor-pointer ${c.idx === selectedCustomerIdx ? 'bg-[var(--background)]' : ''}">
+          <td class="py-2 px-2 text-[var(--muted-foreground)]">${c.rank}</td>
+          <td class="py-2 px-2 font-sans font-medium text-[var(--foreground)]">${c.name}</td>
+          <td class="py-2 px-2 text-right">${fmtNum(c.p24, 2)} <span class="text-[var(--muted-foreground)]">(${sh24.toFixed(2)}%)</span></td>
+          <td class="py-2 px-2 text-right">${fmtNum(c.p25, 2)} <span class="text-[var(--muted-foreground)]">(${sh25.toFixed(2)}%)</span></td>
+          <td class="py-2 px-2 text-right font-semibold ${yoy25Cls}">${yoy25Str}</td>
+          <td class="py-2 px-2 text-right font-semibold">${fmtNum(c.p26, 2)} <span class="text-[var(--muted-foreground)] font-normal">(${sh26.toFixed(2)}%)</span></td>
+          <td class="py-2 px-2 text-right font-semibold ${yoy26Cls}">${yoy26Str}</td>
+          <td class="py-2 px-2 text-right font-bold">${fmtNum(c.total, 2)}</td>
+          <td class="py-2 px-2 text-right font-bold text-[var(--primary)]">${share.toFixed(2)}%</td>
+          <td class="py-2 px-2 text-center font-sans">${getCustomerStatusBadge(c)}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // ============================================================================
+  // PAGE 3: ISSUES & AUDIT LOGIC
+  // ============================================================================
+  function renderIssuesPage() {
+    // Issue 3: Key Accounts with Sharp Drops in 2026 (still active > 0 in 2026)
+    const drops = CUSTOMERS.filter(c => c.p25 >= 100000 && c.p26 > 0 && c.diff26 < -50000)
+      .sort((a, b) => a.diff26 - b.diff26);
+
+    document.getElementById('issue-drop-tbody').innerHTML = drops.map(c => `
+      <tr onclick="jumpToCustomer(${c.idx})" class="hover:bg-[var(--card)] cursor-pointer">
+        <td class="py-1.5 px-1.5 font-sans font-medium text-[var(--foreground)]">${c.name}</td>
+        <td class="py-1.5 px-1.5 text-right">${fmtNum(c.p25, 0)}</td>
+        <td class="py-1.5 px-1.5 text-right">${fmtNum(c.p26, 0)}</td>
+        <td class="py-1.5 px-1.5 text-right text-[var(--error)] font-semibold">${fmtNum(c.diff26, 0)}</td>
+        <td class="py-1.5 px-1.5 text-right text-[var(--error)]">${c.pct26.toFixed(1)}%</td>
+      </tr>
+    `).join('');
+
+    // Issue 4: Churned Customers (p26 == 0, but bought in 2024 or 2025)
+    const churned = CUSTOMERS.filter(c => c.p26 === 0 && (c.p24 > 0 || c.p25 > 0))
+      .sort((a, b) => b.total - a.total);
+
+    document.getElementById('issue-churn-tbody').innerHTML = churned.map(c => `
+      <tr onclick="jumpToCustomer(${c.idx})" class="hover:bg-[var(--card)] cursor-pointer">
+        <td class="py-1.5 px-1.5 font-sans font-medium text-[var(--foreground)]">${c.name}</td>
+        <td class="py-1.5 px-1.5 text-right">${fmtNum(c.p24, 0)}</td>
+        <td class="py-1.5 px-1.5 text-right">${fmtNum(c.p25, 0)}</td>
+        <td class="py-1.5 px-1.5 text-right font-semibold text-[var(--error)]">${fmtNum(c.total, 0)}</td>
+        <td class="py-1.5 px-1.5 text-center font-sans">${c.p25 > 0 ? '2025' : '2024'}</td>
+      </tr>
+    `).join('');
+  }
+
+  // Live theme sync & resize
+  window.addEventListener('themechange', () => {
+    drawOverviewMonthlyCanvas();
+    renderCustomerDetail();
+  });
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('page-overview').classList.contains('hidden')) drawOverviewMonthlyCanvas();
+    if (!document.getElementById('page-customers').classList.contains('hidden')) renderCustomerDetail();
+  });
+
+  // Initialize
+  initCustomerSelector();
+  renderOverview();
+  renderCustomerDetail();
+  renderCustomerSection();
+  renderIssuesPage();
+  </script>
+</body>
+</html>
